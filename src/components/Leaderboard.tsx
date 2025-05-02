@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CountUp } from 'countup.js';
 
 interface Agent {
@@ -21,131 +20,71 @@ interface LeaderboardProps {
 const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }) => {
   // Sort by balance descending
   const sortedAgents = [...agents].sort((a, b) => b.balance - a.balance);
+  const [renderKey, setRenderKey] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   
-  // Track previous positions to detect changes
-  const previousPositionsRef = useRef<{[key: string]: number}>({});
-  const [positionChanges, setPositionChanges] = useState<{[key: string]: boolean}>({});
-  const [prevSortedAgents, setPrevSortedAgents] = useState<Agent[]>([]);
-  const [isReady, setIsReady] = useState<boolean>(false);
-
-  // References for number animations
-  const balanceRefs = useRef<{[key: string]: HTMLSpanElement | null}>({});
-  const balanceCounters = useRef<{[key: string]: CountUp | null}>({});
-  const pnlRefs = useRef<{[key: string]: HTMLSpanElement | null}>({});
-  const pnlCounters = useRef<{[key: string]: CountUp | null}>({});
+  // References for balance elements
+  const balanceRefs = React.useRef<{[key: string]: HTMLSpanElement | null}>({});
+  const pnlRefs = React.useRef<{[key: string]: HTMLSpanElement | null}>({});
   
-  // On first render, initialize previous positions
+  // Update animation state when agents change or animation is triggered
   useEffect(() => {
-    const positions: {[key: string]: number} = {};
-    sortedAgents.forEach((agent, index) => {
-      positions[agent.id] = index;
-    });
-    previousPositionsRef.current = positions;
-    setPrevSortedAgents(sortedAgents);
+    // Initial loading
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 300);
     
-    // Mark component as ready after initial setup
-    setIsReady(true);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  
-  // Check for position changes - only when component is ready
-  useEffect(() => {
-    if (!isReady) return;
-    
-    // Only update when the component is animating (triggered externally)
-    if (isAnimating) {
-      try {
-        const changes: {[key: string]: boolean} = {};
-        const currentPositions: {[key: string]: number} = {};
-        
-        // Record current positions
-        sortedAgents.forEach((agent, index) => {
-          currentPositions[agent.id] = index;
-          
-          // Check if position changed
-          if (previousPositionsRef.current[agent.id] !== undefined && 
-              previousPositionsRef.current[agent.id] !== index) {
-            changes[agent.id] = true;
-          }
-        });
-        
-        // Update position changes and previous positions
-        setPositionChanges(changes);
-        setPrevSortedAgents([...sortedAgents]);
-        previousPositionsRef.current = currentPositions;
-      } catch (error) {
-        console.error("Error handling position changes:", error);
-      }
+    // Animation trigger
+    if (isAnimating && !isLoading) {
+      // Force re-render with new key to avoid DOM manipulation issues
+      setRenderKey(prev => prev + 1);
     }
-  }, [sortedAgents, isAnimating, isReady]);
+    
+    return () => clearTimeout(timer);
+  }, [isAnimating, agents]);
   
-  // Initialize and update counters for balance animations - safely
+  // Initialize counters for animations after DOM is ready
   useEffect(() => {
-    if (!isReady) return;
+    if (isLoading) return;
     
-    // Clean up existing counters to prevent memory leaks
-    const currentBalanceCounters = balanceCounters.current;
-    const currentPnlCounters = pnlCounters.current;
-    
-    // Setup new counters only after the component is fully mounted
-    const setupCounters = () => {
-      try {
-        sortedAgents.forEach(agent => {
-          const balanceElement = balanceRefs.current[agent.id];
-          const pnlElement = pnlRefs.current[agent.id];
-          
-          if (balanceElement) {
-            try {
-              if (currentBalanceCounters[agent.id]) {
-                currentBalanceCounters[agent.id]?.update(agent.balance);
-              } else {
-                currentBalanceCounters[agent.id] = new CountUp(balanceElement, agent.balance, {
-                  duration: 1.5,
-                  prefix: '$',
-                  separator: ',',
-                  decimal: '.',
-                  decimalPlaces: 0
-                });
-                currentBalanceCounters[agent.id]?.start();
-              }
-            } catch (err) {
-              console.warn('Could not animate balance counter:', err);
-            }
+    // Short delay to ensure DOM elements are ready
+    const timer = setTimeout(() => {
+      sortedAgents.forEach(agent => {
+        try {
+          // Balance animation
+          const balanceEl = balanceRefs.current[agent.id];
+          if (balanceEl) {
+            new CountUp(balanceEl, agent.balance, {
+              duration: 1.5,
+              prefix: '$',
+              separator: ',',
+              decimal: '.',
+              decimalPlaces: 0
+            }).start();
           }
           
-          if (pnlElement) {
-            try {
-              if (currentPnlCounters[agent.id]) {
-                currentPnlCounters[agent.id]?.update(agent.pnlPercent);
-              } else {
-                currentPnlCounters[agent.id] = new CountUp(pnlElement, agent.pnlPercent, {
-                  duration: 1.5,
-                  decimalPlaces: 2,
-                  suffix: '%',
-                  prefix: agent.pnlPercent >= 0 ? '+' : ''
-                });
-                currentPnlCounters[agent.id]?.start();
-              }
-            } catch (err) {
-              console.warn('Could not animate PnL counter:', err);
-            }
+          // PNL animation
+          const pnlEl = pnlRefs.current[agent.id];
+          if (pnlEl) {
+            new CountUp(pnlEl, Math.abs(agent.pnlPercent), {
+              duration: 1.5,
+              decimalPlaces: 2,
+              suffix: '%',
+              prefix: agent.pnlPercent >= 0 ? '+' : '-'
+            }).start();
           }
-        });
-      } catch (error) {
-        console.error("Error setting up counters:", error);
-      }
-    };
+        } catch (err) {
+          console.error("Animation error:", err);
+        }
+      });
+    }, 100);
     
-    // Use a small delay to ensure DOM is ready
-    const timerId = setTimeout(setupCounters, 100);
-    
-    return () => {
-      clearTimeout(timerId);
-    };
-  }, [sortedAgents, isReady]);
-  
+    return () => clearTimeout(timer);
+  }, [sortedAgents, isLoading, renderKey]);
+
   // Calculate the maximum balance for scaling bars
   const maxBalance = Math.max(...sortedAgents.map(a => a.balance));
-    
+  
   // Get color for the bar based on index and profit/loss
   const getBarColor = (index: number, pnlPercent: number) => {
     // Top 3 get special colors
@@ -161,29 +100,31 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
     return 'bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700';
   };
 
-  // Don't render until ready to prevent DOM errors
-  if (!isReady) {
-    return <div className="p-4 space-y-3">Loading leaderboard...</div>;
+  if (isLoading) {
+    return (
+      <div className="p-4 space-y-3">
+        <div className="animate-pulse flex flex-col space-y-2">
+          {[...Array(agents.length)].map((_, i) => (
+            <div key={i} className="h-12 bg-white/5 rounded"></div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="p-4 space-y-3">
+    <div className="p-4 space-y-3" key={renderKey}>
       <div className="relative" style={{ height: `${sortedAgents.length * 3.5}rem` }}>
         {sortedAgents.map((agent, index) => {
           const isProfitable = agent.pnlPercent >= 0;
           const barWidth = `${Math.max(5, (agent.balance / maxBalance) * 100)}%`; // Min 5% width for visibility
-          const hasPositionChanged = positionChanges[agent.id];
           
           return (
             <div 
-              key={agent.id}
-              className={`absolute w-full transition-all duration-1000 ease-in-out ${
-                hasPositionChanged ? 'z-10' : ''
-              }`}
+              key={`${agent.id}-${index}`}
+              className="absolute w-full"
               style={{ 
                 top: `${index * 3.5}rem`,
-                transform: 'translateY(0)',
-                transition: 'top 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
               }}
             >
               <div className="flex items-center h-12 group">
@@ -209,7 +150,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                   }`}>
                     {agent.avatar}
                   </div>
-                  <span className="font-bold tracking-tight group-hover:text-arena-accent transition-colors">{agent.name}</span>
+                  <span className="font-bold tracking-tight group-hover:text-arena-accent transition-colors">
+                    {agent.name}
+                  </span>
                 </div>
                 
                 {/* Progress bar */}
@@ -219,7 +162,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                   
                   {/* Colored progress bar with gradient and animation */}
                   <div 
-                    className={`absolute top-0 bottom-0 left-0 rounded-md transition-all duration-1000 leaderboard-bar ${getBarColor(index, agent.pnlPercent)}`}
+                    className={`absolute top-0 bottom-0 left-0 rounded-md transition-all duration-700 ${getBarColor(index, agent.pnlPercent)}`}
                     style={{ 
                       width: barWidth,
                       boxShadow: index < 3 ? 
@@ -230,7 +173,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                     }}
                   ></div>
                   
-                  {/* Balance text with counter animation */}
+                  {/* Balance text */}
                   <div className="absolute right-2 h-full flex items-center">
                     <span 
                       className="text-base font-bold data-value tabular-nums"
@@ -242,7 +185,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                     </span>
                   </div>
                   
-                  {/* PnL percentage with counter animation */}
+                  {/* PnL percentage */}
                   <div className="absolute left-2 h-full flex items-center">
                     <span 
                       className={`text-sm font-medium ${
@@ -253,8 +196,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                         if (el) pnlRefs.current[agent.id] = el;
                       }}
                     >
-                      {agent.pnlPercent > 0 ? '+' : ''}
-                      {agent.pnlPercent.toFixed(2)}%
+                      {agent.pnlPercent > 0 ? '+' : '-'}
+                      {Math.abs(agent.pnlPercent).toFixed(2)}%
                     </span>
                   </div>
                 </div>

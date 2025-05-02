@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import NavBar from '@/components/NavBar';
 import AgentCard from '@/components/AgentCard';
 import PriceChart from '@/components/PriceChart';
@@ -112,9 +112,11 @@ const ArenaPage = () => {
         }, 1500);
       }
       
-      // Animate leaderboard to show changes
-      setIsLeaderboardAnimating(true);
-      setTimeout(() => setIsLeaderboardAnimating(false), 1000);
+      // Animate leaderboard to show changes - with debounce
+      if (!isLeaderboardAnimating) {
+        setIsLeaderboardAnimating(true);
+        setTimeout(() => setIsLeaderboardAnimating(false), 1200);
+      }
     }
     
     // Check if this was the last candle
@@ -179,7 +181,7 @@ const ArenaPage = () => {
   };
   
   // Handle candle reveal from PriceChart when auto-revealing
-  const handleCandleReveal = (index: number) => {
+  const handleCandleReveal = () => {
     revealNextCandle();
   };
   
