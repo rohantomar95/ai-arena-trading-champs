@@ -377,6 +377,17 @@ const PriceChart: React.FC<PriceChartProps> = ({
                   tick={{ fill: 'rgba(255,255,255,0.7)' }}
                   tickFormatter={formatPrice}
                 />
+                
+                {/* Add a second YAxis for volume */}
+                <YAxis 
+                  yAxisId="volume"
+                  orientation="right"
+                  domain={['auto', 'auto']}
+                  stroke="rgba(255,255,255,0.3)"
+                  tick={{ fill: 'rgba(255,255,255,0.5)' }}
+                  tickFormatter={(value) => `${Math.round(value)}`}
+                />
+                
                 <RechartsTooltip content={<CustomTooltip />} />
                 
                 {/* Volume bars */}
@@ -393,6 +404,7 @@ const PriceChart: React.FC<PriceChartProps> = ({
                   dataKey={d => Math.abs(d.high - d.low)} 
                   fill="transparent"
                   stroke="rgba(255,255,255,0.1)" // Fixed: Use a static string instead of a function
+                  yAxisId="volume"  // Add the same yAxisId to match the first Bar component
                   shape={<CustomCandle />}
                 />
                 
