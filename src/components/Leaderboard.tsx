@@ -44,6 +44,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
   
   // Check for position changes
   useEffect(() => {
+    // Only update when the component is not already animating
     if (isAnimating) {
       const changes: {[key: string]: boolean} = {};
       const currentPositions: {[key: string]: number} = {};
@@ -66,41 +67,63 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
     }
   }, [sortedAgents, isAnimating]);
   
-  // Initialize and update counters for balance animations
+  // Initialize and update counters for balance animations - safely
   useEffect(() => {
-    sortedAgents.forEach(agent => {
-      const balanceElement = balanceRefs.current[agent.id];
-      const pnlElement = pnlRefs.current[agent.id];
-      
-      if (balanceElement) {
-        if (balanceCounters.current[agent.id]) {
-          balanceCounters.current[agent.id]?.update(agent.balance);
-        } else {
-          balanceCounters.current[agent.id] = new CountUp(balanceElement, agent.balance, {
-            duration: 1.5,
-            prefix: '$',
-            separator: ',',
-            decimal: '.',
-            decimalPlaces: 0
-          });
-          balanceCounters.current[agent.id]?.start();
+    // Clean up existing counters to prevent memory leaks
+    const currentBalanceCounters = balanceCounters.current;
+    const currentPnlCounters = pnlCounters.current;
+    
+    // Setup new counters only after the component is fully mounted
+    const setupCounters = () => {
+      sortedAgents.forEach(agent => {
+        const balanceElement = balanceRefs.current[agent.id];
+        const pnlElement = pnlRefs.current[agent.id];
+        
+        if (balanceElement) {
+          try {
+            if (currentBalanceCounters[agent.id]) {
+              currentBalanceCounters[agent.id]?.update(agent.balance);
+            } else {
+              currentBalanceCounters[agent.id] = new CountUp(balanceElement, agent.balance, {
+                duration: 1.5,
+                prefix: '$',
+                separator: ',',
+                decimal: '.',
+                decimalPlaces: 0
+              });
+              currentBalanceCounters[agent.id]?.start();
+            }
+          } catch (err) {
+            console.warn('Could not animate balance counter:', err);
+          }
         }
-      }
-      
-      if (pnlElement) {
-        if (pnlCounters.current[agent.id]) {
-          pnlCounters.current[agent.id]?.update(agent.pnlPercent);
-        } else {
-          pnlCounters.current[agent.id] = new CountUp(pnlElement, agent.pnlPercent, {
-            duration: 1.5,
-            decimalPlaces: 2,
-            suffix: '%',
-            prefix: agent.pnlPercent >= 0 ? '+' : ''
-          });
-          pnlCounters.current[agent.id]?.start();
+        
+        if (pnlElement) {
+          try {
+            if (currentPnlCounters[agent.id]) {
+              currentPnlCounters[agent.id]?.update(agent.pnlPercent);
+            } else {
+              currentPnlCounters[agent.id] = new CountUp(pnlElement, agent.pnlPercent, {
+                duration: 1.5,
+                decimalPlaces: 2,
+                suffix: '%',
+                prefix: agent.pnlPercent >= 0 ? '+' : ''
+              });
+              currentPnlCounters[agent.id]?.start();
+            }
+          } catch (err) {
+            console.warn('Could not animate PnL counter:', err);
+          }
         }
-      }
-    });
+      });
+    };
+    
+    // Use a small delay to ensure DOM is ready
+    const timerId = setTimeout(setupCounters, 50);
+    
+    return () => {
+      clearTimeout(timerId);
+    };
   }, [sortedAgents]);
   
   // Calculate the maximum balance for scaling bars
@@ -151,15 +174,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                     'text-white/70'
                   }`}>
                     {index + 1}
-                    {index < 3 && (
-                      <span className={`absolute inset-0 blur-sm opacity-70 ${
-                        index === 0 ? 'text-yellow-300' :
-                        index === 1 ? 'text-gray-200' : 
-                        'text-amber-500'
-                      }`}>
-                        {index + 1}
-                      </span>
-                    )}
                   </span>
                 </div>
                 
