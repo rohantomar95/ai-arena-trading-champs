@@ -70,23 +70,19 @@
   }
 }
 
-/* Leader position change animation */
+/* Leader position change animation - improved for smoother transitions */
 @keyframes position-change {
   0% { 
-    transform: translateY(-100%);
     opacity: 0.7;
+    transform: translateY(-20px);
   }
-  25% { 
-    transform: translateY(-50%); 
-    opacity: 0.8;
-  }
-  75% { 
-    transform: translateY(50%); 
+  50% {
     opacity: 0.9;
+    transform: translateY(10px);
   }
   100% { 
-    transform: translateY(100%); 
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -94,6 +90,24 @@
 @keyframes typing {
   from { width: 0 }
   to { width: 100% }
+}
+
+/* Number counter animation */
+@keyframes number-count {
+  from { opacity: 0.3; }
+  to { opacity: 1; }
+}
+
+/* Candle flicker animation */
+@keyframes candle-flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+/* Position badge animation */
+@keyframes badge-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
 
 /* Custom asset glow effects */
@@ -110,6 +124,8 @@
 .cyber-frame {
   position: relative;
   border: 1px solid rgba(17, 231, 218, 0.3);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3), 
+              0 0 15px -3px rgba(17, 231, 218, 0.15);
 }
 
 .cyber-frame:before {
@@ -137,6 +153,25 @@
 /* Animated leaderboard bars */
 .leaderboard-bar {
   animation: bar-expand 1s ease-out forwards;
+  position: relative;
+  overflow: hidden;
+}
+
+.leaderboard-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    left: 200%;
+  }
 }
 
 /* Enhanced glass morphism */
@@ -160,6 +195,7 @@
 .data-value {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
+  font-family: 'Courier New', monospace;
 }
 
 /* Apply neon flicker effect to important elements */
@@ -191,4 +227,75 @@
   white-space: nowrap;
   border-right: 2px solid transparent;
   animation: typing 3.5s steps(40, end);
+}
+
+/* Position indicator styling */
+.position-indicator {
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+/* Candle glow effect */
+.candle-glow {
+  filter: drop-shadow(0 0 3px rgba(17, 231, 218, 0.3));
+  animation: candle-flicker 2s ease-in-out infinite;
+}
+
+/* Number counter animation */
+.animate-count {
+  animation: number-count 0.5s ease-out;
+}
+
+/* Dashboard panel hover effect */
+.dashboard-panel {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dashboard-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px -5px rgba(0, 0, 0, 0.3),
+              0 0 20px -5px rgba(17, 231, 218, 0.2);
+}
+
+/* Vibrant button glow effect */
+.glow-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.glow-button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.glow-button:hover::after {
+  opacity: 1;
+}
+
+/* Leader badge styling */
+.leader-badge {
+  position: relative;
+}
+
+.leader-badge::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  background: linear-gradient(45deg, #11E7DA, transparent, #9b87f5, transparent, #11E7DA);
+  border-radius: 50%;
+  animation: rotate 4s linear infinite;
+  opacity: 0.5;
+}
+
+@keyframes rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

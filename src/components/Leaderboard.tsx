@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { CountUp } from 'countup.js';
 
 interface Agent {
   id: string;
@@ -24,6 +25,12 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
   const previousPositionsRef = useRef<{[key: string]: number}>({});
   const [positionChanges, setPositionChanges] = useState<{[key: string]: boolean}>({});
   const [prevSortedAgents, setPrevSortedAgents] = useState<Agent[]>([]);
+
+  // References for number animations
+  const balanceRefs = useRef<{[key: string]: HTMLSpanElement | null}>({});
+  const balanceCounters = useRef<{[key: string]: CountUp | null}>({});
+  const pnlRefs = useRef<{[key: string]: HTMLSpanElement | null}>({});
+  const pnlCounters = useRef<{[key: string]: CountUp | null}>({});
   
   // On first render, initialize previous positions
   useEffect(() => {
@@ -59,101 +66,153 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
     }
   }, [sortedAgents, isAnimating]);
   
+  // Initialize and update counters for balance animations
+  useEffect(() => {
+    sortedAgents.forEach(agent => {
+      const balanceElement = balanceRefs.current[agent.id];
+      const pnlElement = pnlRefs.current[agent.id];
+      
+      if (balanceElement) {
+        if (balanceCounters.current[agent.id]) {
+          balanceCounters.current[agent.id]?.update(agent.balance);
+        } else {
+          balanceCounters.current[agent.id] = new CountUp(balanceElement, agent.balance, {
+            duration: 1.5,
+            prefix: '$',
+            separator: ',',
+            decimal: '.',
+            decimalPlaces: 0
+          });
+          balanceCounters.current[agent.id]?.start();
+        }
+      }
+      
+      if (pnlElement) {
+        if (pnlCounters.current[agent.id]) {
+          pnlCounters.current[agent.id]?.update(agent.pnlPercent);
+        } else {
+          pnlCounters.current[agent.id] = new CountUp(pnlElement, agent.pnlPercent, {
+            duration: 1.5,
+            decimalPlaces: 2,
+            suffix: '%',
+            prefix: agent.pnlPercent >= 0 ? '+' : ''
+          });
+          pnlCounters.current[agent.id]?.start();
+        }
+      }
+    });
+  }, [sortedAgents]);
+  
   // Calculate the maximum balance for scaling bars
   const maxBalance = Math.max(...sortedAgents.map(a => a.balance));
-  
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(value);
-  };
-  
+    
   // Get color for the bar based on index and profit/loss
   const getBarColor = (index: number, pnlPercent: number) => {
     // Top 3 get special colors
-    if (index === 0) return 'bg-gradient-to-r from-yellow-500 to-yellow-300';
-    if (index === 1) return 'bg-gradient-to-r from-gray-300 to-gray-200';
-    if (index === 2) return 'bg-gradient-to-r from-amber-700 to-amber-600';
+    if (index === 0) return 'bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-300';
+    if (index === 1) return 'bg-gradient-to-r from-gray-300 via-gray-400 to-gray-200';
+    if (index === 2) return 'bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500';
     
     // Others based on profit/loss
-    if (pnlPercent > 0) return 'bg-gradient-to-r from-arena-green/80 to-arena-green/60';
-    if (pnlPercent < 0) return 'bg-gradient-to-r from-arena-red/80 to-arena-red/60';
+    if (pnlPercent > 0) return 'bg-gradient-to-r from-arena-green/90 via-arena-green/80 to-arena-green/60';
+    if (pnlPercent < 0) return 'bg-gradient-to-r from-arena-red/90 via-arena-red/80 to-arena-red/60';
     
     // Neutral
-    return 'bg-gradient-to-r from-blue-900 to-blue-800';
+    return 'bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700';
   };
 
   return (
     <div className="p-4 space-y-3">
-      <div className="relative">
+      <div className="relative" style={{ height: `${sortedAgents.length * 3.5}rem` }}>
         {sortedAgents.map((agent, index) => {
           const isProfitable = agent.pnlPercent >= 0;
           const barWidth = `${Math.max(5, (agent.balance / maxBalance) * 100)}%`; // Min 5% width for visibility
           const hasPositionChanged = positionChanges[agent.id];
           
-          // Calculate vertical position based on index
-          const verticalPosition = `${index * 3.5}rem`;
-          
-          // Get the previous position of this agent
-          const prevIndex = prevSortedAgents.findIndex(a => a.id === agent.id);
-          const prevPosition = prevIndex > -1 ? `${prevIndex * 3.5}rem` : verticalPosition;
-          
           return (
             <div 
               key={agent.id}
               className={`absolute w-full transition-all duration-1000 ease-in-out ${
-                hasPositionChanged ? 'position-changed' : ''
+                hasPositionChanged ? 'z-10' : ''
               }`}
               style={{ 
-                top: verticalPosition,
-                transform: isAnimating && hasPositionChanged ? `translateY(0)` : 'none'
+                top: `${index * 3.5}rem`,
+                transform: 'translateY(0)',
+                transition: 'top 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
               }}
             >
-              <div className="flex items-center h-12">
-                {/* Position rank */}
-                <div className="w-8 flex justify-center items-center">
-                  <span className={`font-mono font-bold text-lg ${index < 3 ? 'text-yellow-400' : 'text-white/70'}`}>
+              <div className="flex items-center h-12 group">
+                {/* Position rank with badge effect */}
+                <div className={`w-10 flex justify-center items-center ${index < 3 ? 'scale-110' : ''}`}>
+                  <span className={`font-mono font-bold text-lg relative ${
+                    index === 0 ? 'text-yellow-400' :
+                    index === 1 ? 'text-gray-300' :
+                    index === 2 ? 'text-amber-600' : 
+                    'text-white/70'
+                  }`}>
                     {index + 1}
+                    {index < 3 && (
+                      <span className={`absolute inset-0 blur-sm opacity-70 ${
+                        index === 0 ? 'text-yellow-300' :
+                        index === 1 ? 'text-gray-200' : 
+                        'text-amber-500'
+                      }`}>
+                        {index + 1}
+                      </span>
+                    )}
                   </span>
                 </div>
                 
-                {/* Agent name */}
+                {/* Agent name with avatar */}
                 <div className="w-1/4 flex items-center gap-2">
-                  <div className="h-8 w-8 flex items-center justify-center text-base bg-arena-bg/70 rounded-full">
+                  <div className={`h-8 w-8 flex items-center justify-center text-base rounded-full border ${
+                    index === 0 ? 'border-yellow-400 bg-yellow-400/10' :
+                    index === 1 ? 'border-gray-300 bg-gray-300/10' :
+                    index === 2 ? 'border-amber-600 bg-amber-600/10' :
+                    'border-white/20 bg-arena-bg/70'
+                  }`}>
                     {agent.avatar}
                   </div>
-                  <span className="font-bold tracking-tight">{agent.name}</span>
+                  <span className="font-bold tracking-tight group-hover:text-arena-accent transition-colors">{agent.name}</span>
                 </div>
                 
                 {/* Progress bar */}
-                <div className="relative flex-1 h-6">
+                <div className="relative flex-1 h-8">
                   {/* Background bar */}
                   <div className="absolute inset-0 bg-arena-card/40 rounded-md"></div>
                   
-                  {/* Colored progress bar */}
+                  {/* Colored progress bar with gradient and animation */}
                   <div 
                     className={`absolute top-0 bottom-0 left-0 rounded-md transition-all duration-1000 leaderboard-bar ${getBarColor(index, agent.pnlPercent)}`}
                     style={{ 
                       width: barWidth,
-                      boxShadow: index < 3 ? '0 0 15px rgba(234, 179, 8, 0.5)' : 'none'
+                      boxShadow: index < 3 ? 
+                        index === 0 ? '0 0 15px rgba(234, 179, 8, 0.6)' :
+                        index === 1 ? '0 0 12px rgba(209, 213, 219, 0.4)' :
+                        '0 0 10px rgba(217, 119, 6, 0.3)' 
+                        : 'none'
                     }}
                   ></div>
                   
-                  {/* Balance text */}
+                  {/* Balance text with counter animation */}
                   <div className="absolute right-2 h-full flex items-center">
-                    <span className="text-base font-bold data-value">
-                      {formatCurrency(agent.balance)}
+                    <span 
+                      className="text-base font-bold data-value tabular-nums"
+                      ref={el => balanceRefs.current[agent.id] = el}
+                    >
+                      ${agent.balance.toLocaleString()}
                     </span>
                   </div>
                   
-                  {/* PnL percentage */}
+                  {/* PnL percentage with counter animation */}
                   <div className="absolute left-2 h-full flex items-center">
-                    <span className={`text-xs font-medium ${
-                      agent.pnlPercent > 0 ? 'text-arena-green' : 
-                      agent.pnlPercent < 0 ? 'text-arena-red' : 'text-white/70'
-                    }`}>
+                    <span 
+                      className={`text-sm font-medium ${
+                        agent.pnlPercent > 0 ? 'text-arena-green' : 
+                        agent.pnlPercent < 0 ? 'text-arena-red' : 'text-white/70'
+                      }`}
+                      ref={el => pnlRefs.current[agent.id] = el}
+                    >
                       {agent.pnlPercent > 0 ? '+' : ''}
                       {agent.pnlPercent.toFixed(2)}%
                     </span>
@@ -164,8 +223,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
           );
         })}
       </div>
-      {/* This empty space ensures the container has proper height */}
-      <div style={{ height: `${sortedAgents.length * 3.5}rem` }}></div>
     </div>
   );
 };

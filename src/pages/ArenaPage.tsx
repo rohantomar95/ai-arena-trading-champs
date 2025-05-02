@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import NavBar from '@/components/NavBar';
 import AgentCard from '@/components/AgentCard';
 import PriceChart from '@/components/PriceChart';
@@ -28,6 +28,12 @@ const ArenaPage = () => {
   const [isRoundComplete, setIsRoundComplete] = useState<boolean>(false);
   const [tradeLogs, setTradeLogs] = useState<TradeLog[]>([]);
   const [isLeaderboardAnimating, setIsLeaderboardAnimating] = useState<boolean>(false);
+  const [commentary, setCommentary] = useState<string>('Welcome to the AI Arena Trading Championship!');
+  
+  // Function to display game commentary
+  const showCommentary = (message: string) => {
+    setCommentary(message);
+  };
   
   // Function to start a new round
   const startRound = () => {
@@ -35,28 +41,37 @@ const ArenaPage = () => {
     const newCandles = generateCandlesForRound(currentRound);
     setCandles(newCandles);
     
-    // Generate initial trades for all agents
-    const initialTrades = generateInitialTrades(
-      agents, 
-      currentRound, 
-      newCandles[0].open
-    );
+    // Show round start commentary
+    showCommentary(`Round ${currentRound} is starting! AI agents are analyzing the markets...`);
     
-    // Update agents with their new positions
-    const updatedAgents = updateAgentsWithTrades(agents, initialTrades);
-    
-    // Add trades to logs
-    setTradeLogs(prev => [...initialTrades, ...prev]);
-    
-    // Update state
-    setAgents(updatedAgents);
-    setIsGameRunning(true);
-    setIsRoundComplete(false);
-    
-    toast({
-      title: `Round ${currentRound} Started`,
-      description: "AI agents have placed their trades. Click 'Reveal Next Candle' to see the results.",
-    });
+    // Small delay before generating trades for dramatic effect
+    setTimeout(() => {
+      // Generate initial trades for all agents
+      const initialTrades = generateInitialTrades(
+        agents, 
+        currentRound, 
+        newCandles[0].open
+      );
+      
+      // Update agents with their new positions
+      const updatedAgents = updateAgentsWithTrades(agents, initialTrades);
+      
+      // Add trades to logs
+      setTradeLogs(prev => [...initialTrades, ...prev]);
+      
+      // Update state
+      setAgents(updatedAgents);
+      setIsGameRunning(true);
+      setIsRoundComplete(false);
+      
+      // Update commentary
+      showCommentary(`All agents have placed their trades! Price discovery is beginning...`);
+      
+      toast({
+        title: `Round ${currentRound} Started`,
+        description: "AI agents have placed their trades. Click 'Reveal Next Candle' to see the results.",
+      });
+    }, 1500);
   };
   
   // Function to reveal the next candle
@@ -76,9 +91,26 @@ const ArenaPage = () => {
     const previousCandle = revealedCount > 0 ? updatedCandles[revealedCount - 1] : null;
     const currentCandle = updatedCandles[revealedCount];
     
+    // Show candle reveal commentary
+    showCommentary(`Candle #${revealedCount + 1} revealed! Price moved to $${currentCandle.close.toFixed(2)}`);
+    
     if (previousCandle) {
       const updatedAgents = calculatePnL(agents, currentCandle, previousCandle);
       setAgents(updatedAgents);
+      
+      // Find agents with significant P&L changes for commentary
+      const bigWinner = updatedAgents.reduce((prev, current) => 
+        (prev.pnlPercent > current.pnlPercent) ? prev : current);
+        
+      const bigLoser = updatedAgents.reduce((prev, current) => 
+        (prev.pnlPercent < current.pnlPercent) ? prev : current);
+      
+      // Add commentary about notable agents if there are significant changes
+      if (Math.abs(bigWinner.pnlPercent) > 5) {
+        setTimeout(() => {
+          showCommentary(`${bigWinner.name} is ${bigWinner.pnlPercent > 0 ? 'surging' : 'struggling'} with a ${bigWinner.pnlPercent.toFixed(2)}% P&L!`);
+        }, 1500);
+      }
       
       // Animate leaderboard to show changes
       setIsLeaderboardAnimating(true);
@@ -89,6 +121,8 @@ const ArenaPage = () => {
     if (revealedCount === candles.length - 1) {
       // This was the last candle, round is complete
       setTimeout(() => {
+        showCommentary(`Round ${currentRound} complete! All positions are being settled...`);
+        
         setIsRoundComplete(true);
         setIsGameRunning(false);
         
@@ -113,13 +147,28 @@ const ArenaPage = () => {
         
         // If this was the last round, end the game
         if (currentRound === 5) {
+          const winner = agentsWithClosedPositions.reduce((prev, current) => 
+            prev.balance > current.balance ? prev : current);
+            
+          setTimeout(() => {
+            showCommentary(`Championship complete! ${winner.name} is the winner with $${winner.balance.toLocaleString()}!`);
+          }, 1500);
+          
           toast({
             title: "Championship Complete!",
-            description: "The AI Arena Trading Championship has ended.",
+            description: `${winner.name} is the champion of the AI Arena!`,
           });
         } else {
           // Prepare for next round
           setCurrentRound(prev => prev + 1);
+          
+          const leader = agentsWithClosedPositions.reduce((prev, current) => 
+            prev.balance > current.balance ? prev : current);
+            
+          setTimeout(() => {
+            showCommentary(`${leader.name} is leading after round ${currentRound}! Prepare for round ${currentRound + 1}...`);
+          }, 1500);
+          
           toast({
             title: `Round ${currentRound} Complete`,
             description: "All positions have been closed. Click 'Start Next Round' to continue.",
@@ -151,7 +200,7 @@ const ArenaPage = () => {
               />
             </div>
             
-            <div>
+            <div className="flex flex-col gap-6">
               <GameControls 
                 onStartRound={startRound}
                 onRevealCandle={revealNextCandle}
@@ -162,6 +211,18 @@ const ArenaPage = () => {
                 totalCandles={candles.length}
                 isLastRound={currentRound === 5}
               />
+              
+              {/* Commentary section */}
+              <div className="glass-card p-4">
+                <h3 className="text-sm font-semibold text-arena-textMuted mb-2 uppercase tracking-wider">
+                  Arena Commentary
+                </h3>
+                <div className="h-20 flex items-center justify-center">
+                  <p className="commentary-text text-center text-white font-medium">
+                    {commentary}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
           
