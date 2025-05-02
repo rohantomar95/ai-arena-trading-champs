@@ -144,6 +144,40 @@
   .web3-button:active {
     transform: translateY(1px);
   }
+  
+  /* Race bar styling */
+  .race-bar {
+    @apply h-8 relative overflow-hidden rounded-md transition-all duration-500;
+  }
+  
+  .race-bar-label {
+    @apply absolute inset-y-0 left-3 flex items-center font-medium z-10;
+  }
+  
+  .race-bar-value {
+    @apply absolute inset-y-0 right-3 flex items-center font-bold z-10;
+  }
+  
+  /* Crypto card */
+  .crypto-card {
+    @apply bg-gradient-to-br from-arena-card to-arena-card/70 border border-white/5 rounded-lg overflow-hidden;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Modern label */
+  .neo-label {
+    @apply text-xs uppercase tracking-wider text-arena-textMuted font-medium;
+  }
+  
+  /* High-tech divider */
+  .tech-divider {
+    @apply h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent;
+  }
+  
+  /* Modern badge */
+  .neo-badge {
+    @apply px-2 py-0.5 rounded-full text-xs font-medium;
+  }
 }
 
 @layer utilities {
@@ -156,7 +190,7 @@
   }
   
   .animate-shuffle {
-    animation: shuffle 0.8s ease-in-out;
+    animation: dynamic-shuffle 0.8s ease-in-out;
   }
   
   .animate-reveal {
@@ -175,6 +209,15 @@
     animation: float 3s ease-in-out infinite;
   }
   
+  .animate-bar-race {
+    animation: bar-expand 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  .animate-gradient-shift {
+    animation: gradient-shift 5s ease infinite;
+    background-size: 200% 200%;
+  }
+  
   @keyframes float {
     0% {
       transform: translateY(0px);
@@ -184,6 +227,93 @@
     }
     100% {
       transform: translateY(0px);
+    }
+  }
+  
+  @keyframes pulse-glow {
+    0%, 100% {
+      opacity: 1;
+      filter: brightness(100%) drop-shadow(0 0 5px rgba(17, 231, 218, 0.3));
+    }
+    50% {
+      opacity: 0.8;
+      filter: brightness(150%) drop-shadow(0 0 10px rgba(17, 231, 218, 0.6));
+    }
+  }
+  
+  @keyframes dynamic-shuffle {
+    0% {
+      transform: translateY(0);
+    }
+    20% {
+      transform: translateY(-15px);
+    }
+    40% {
+      transform: translateY(10px);
+    }
+    60% {
+      transform: translateY(-5px);
+    }
+    80% {
+      transform: translateY(2px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes reveal {
+    0% { 
+      transform: scaleY(0);
+      opacity: 0 
+    }
+    100% { 
+      transform: scaleY(1);
+      opacity: 1 
+    }
+  }
+  
+  @keyframes scale-in {
+    0% { 
+      transform: scale(0.8);
+      opacity: 0 
+    }
+    100% { 
+      transform: scale(1);
+      opacity: 1 
+    }
+  }
+  
+  @keyframes flicker {
+    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+      opacity: 0.99;
+      filter: brightness(1);
+    }
+    20%, 22%, 24%, 55% {
+      opacity: 0.4;
+      filter: brightness(1.5);
+    }
+  }
+  
+  @keyframes bar-expand {
+    0% {
+      transform: scaleX(0);
+      transform-origin: left;
+    }
+    100% {
+      transform: scaleX(1);
+      transform-origin: left;
     }
   }
 }

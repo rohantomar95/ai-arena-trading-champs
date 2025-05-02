@@ -140,19 +140,7 @@ const ArenaPage = () => {
       
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         <div className="grid grid-cols-1 gap-6 mb-6">
-          {/* Leaderboard at the top for maximum visibility */}
-          <div className="glass-card">
-            <div className="p-4 border-b border-white/10 flex items-center justify-between">
-              <h2 className="text-xl font-bold neon-text">Live Leaderboard</h2>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-arena-textMuted">Round:</span>
-                <span className="px-3 py-1 bg-arena-card rounded-full text-arena-accent font-medium">{currentRound}/5</span>
-              </div>
-            </div>
-            <Leaderboard agents={agents} isAnimating={isLeaderboardAnimating} />
-          </div>
-          
-          {/* Main game area */}
+          {/* 1. Price Chart at the top */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-3">
               <PriceChart 
@@ -177,8 +165,20 @@ const ArenaPage = () => {
             </div>
           </div>
           
-          {/* Agents in a single row */}
-          <div>
+          {/* 2. Leaderboard below the chart */}
+          <div className="glass-card">
+            <div className="p-4 border-b border-white/10 flex items-center justify-between">
+              <h2 className="text-xl font-bold neon-text">Live Leaderboard</h2>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-arena-textMuted">Round:</span>
+                <span className="px-3 py-1 bg-arena-card rounded-full text-arena-accent font-medium">{currentRound}/5</span>
+              </div>
+            </div>
+            <Leaderboard agents={agents} isAnimating={isLeaderboardAnimating} />
+          </div>
+          
+          {/* 3. Agents in a single row */}
+          <div className="glass-card p-4">
             <h2 className="text-xl font-bold mb-3 neon-text">AI Agents</h2>
             <div className="flex overflow-x-auto pb-4 gap-4 snap-x">
               {agents.map((agent, index) => (
@@ -197,10 +197,10 @@ const ArenaPage = () => {
             </div>
           </div>
           
-          {/* Trade logs */}
-          <div>
-            <h2 className="text-xl font-bold mb-3 neon-text">Trade Logs</h2>
-            <div className="h-[300px]">
+          {/* 4. Trade logs at the bottom */}
+          <div className="glass-card">
+            <h2 className="text-xl font-bold p-4 border-b border-white/10 neon-text">Trade History</h2>
+            <div className="h-[400px]">
               <TradeLogs logs={tradeLogs} />
             </div>
           </div>

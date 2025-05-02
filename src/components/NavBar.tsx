@@ -20,7 +20,7 @@ const NavBar = () => {
             </div>
           </div>
           <h1 className="text-2xl font-bold">
-            <span className="neon-text">AI Arena</span> 
+            <span className="neon-text accent-glow">AI Arena</span> 
             <span className="relative ml-2">
               Trading Championship
               <span className="absolute -top-1 -right-4 text-xs bg-arena-accent/20 text-arena-accent px-1 rounded">v1.0</span>
@@ -50,11 +50,11 @@ const NavBar = () => {
             Arena
           </Link>
           
-          <div className="ml-4 flex items-center gap-2 bg-arena-card/60 backdrop-blur-sm pl-2 pr-4 py-2 rounded-full border border-white/5">
+          <div className="ml-4 flex items-center gap-2 glass-neo pl-3 pr-4 py-2 rounded-full border border-white/5">
             <div className="h-5 w-5 rounded-full bg-gradient-to-r from-arena-accent to-arena-accent2 flex items-center justify-center">
               <div className="h-2 w-2 rounded-full bg-white animate-pulse-glow"></div>
             </div>
-            <span className="text-sm font-medium text-white">100,000 USDC</span>
+            <span className="text-sm font-medium text-white data-value">100,000 USDC</span>
           </div>
         </div>
       </div>

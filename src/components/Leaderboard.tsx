@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, Trophy, Medal } from 'lucide-react';
 
 interface Agent {
   id: string;
@@ -35,82 +34,68 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
   const calculatePnL = (current: number, initial: number) => {
     return ((current - initial) / initial) * 100;
   };
+  
+  // Get color for the bar based on index
+  const getBarColor = (index: number) => {
+    // Top 3 get gold color
+    if (index < 3) return 'bg-gradient-to-r from-yellow-600 to-yellow-500';
+    // Next 3 get blue
+    if (index < 6) return 'bg-gradient-to-r from-blue-900 to-blue-800';
+    // Last ones get red
+    return 'bg-gradient-to-r from-red-900 to-red-800';
+  };
 
   return (
     <div className="p-4 space-y-3">
       {sortedAgents.map((agent, index) => {
         const pnl = calculatePnL(agent.balance, agent.initialBalance);
         const isProfitable = pnl >= 0;
-        const barWidth = `${(agent.balance / maxBalance) * 95}%`; // Keep max at 95% for padding
-        
-        // Choose medal for top 3
-        const renderRank = () => {
-          if (index === 0) return <Trophy className="h-5 w-5 text-yellow-400" />;
-          if (index === 1) return <Medal className="h-5 w-5 text-gray-400" />;
-          if (index === 2) return <Medal className="h-5 w-5 text-amber-700" />;
-          return <span className="text-lg font-bold text-arena-textMuted w-6 text-center">{index + 1}</span>;
-        };
+        const barWidth = `${Math.max(5, (agent.balance / maxBalance) * 100)}%`; // Min 5% width for visibility
         
         return (
           <div 
             key={agent.id}
             className={`relative ${
-              isAnimating ? 'animate-shuffle' : 'transition-all duration-1000'
+              isAnimating ? 'animate-shuffle' : 'transition-all duration-1000 ease-out'
             }`}
             style={{ 
               animationDuration: '0.8s', 
               animationDelay: `${index * 0.05}s` 
             }}
           >
-            {/* Background bar */}
-            <div className="absolute inset-0 h-16 bg-arena-card/40 rounded-lg" />
-            
-            {/* Progress bar */}
-            <div 
-              className={`absolute top-0 bottom-0 left-0 rounded-lg transition-all duration-1000 ease-out ${
-                isProfitable ? 'bg-gradient-to-r from-arena-green/20 to-arena-green/5' : 'bg-gradient-to-r from-arena-red/20 to-arena-red/5'
-              }`}
-              style={{ 
-                width: barWidth,
-                boxShadow: isProfitable ? '0 0 10px rgba(18, 209, 142, 0.3)' : '0 0 10px rgba(248, 73, 96, 0.3)'
-              }}
-            />
-            
-            {/* Content */}
-            <div className="relative flex items-center h-16 px-4">
-              {/* Rank */}
-              <div className="flex items-center justify-center w-8 h-8 rounded-md bg-arena-bg mr-3">
-                {renderRank()}
+            <div className="flex items-center h-12">
+              {/* Agent name on the left */}
+              <div className="w-1/4 text-right pr-4 font-bold tracking-tight">
+                {agent.name}
               </div>
               
-              {/* Avatar */}
-              <div className="h-10 w-10 rounded-md bg-gradient-to-br from-arena-accent/30 to-arena-accent2/30 flex items-center justify-center mr-3">
-                <span className="text-2xl">{agent.avatar}</span>
-              </div>
-              
-              {/* Agent info */}
-              <div className="flex-1">
-                <div className="font-medium text-white">{agent.name}</div>
-                <div className="text-sm flex items-center">
-                  {agent.position && (
-                    <span className={`mr-2 ${agent.position === 'long' ? 'text-arena-green' : 'text-arena-red'}`}>
-                      {agent.position.toUpperCase()}
-                    </span>
-                  )}
-                  <span className={`flex items-center ${isProfitable ? 'text-arena-green' : 'text-arena-red'}`}>
-                    {isProfitable ? (
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3 mr-1" />
-                    )}
-                    {isProfitable ? '+' : ''}{pnl.toFixed(2)}%
+              {/* Bar container */}
+              <div className="relative flex-1 h-8">
+                {/* Background bar */}
+                <div className="absolute inset-0 bg-arena-card/40 rounded-md"></div>
+                
+                {/* Colored progress bar */}
+                <div 
+                  className={`absolute top-0 bottom-0 left-0 rounded-md transition-all duration-1000 ${getBarColor(index)}`}
+                  style={{ 
+                    width: barWidth,
+                    boxShadow: index < 3 ? '0 0 15px rgba(234, 179, 8, 0.5)' : 'none'
+                  }}
+                ></div>
+                
+                {/* Balance text */}
+                <div className="absolute right-2 h-full flex items-center">
+                  <span className="text-lg font-bold">
+                    {formatCurrency(agent.balance)}
                   </span>
                 </div>
-              </div>
-              
-              {/* Balance */}
-              <div className="text-right">
-                <div className="font-bold text-lg">{formatCurrency(agent.balance)}</div>
+                
+                {/* Avatar */}
+                <div className="absolute left-2 h-full flex items-center">
+                  <div className="h-6 w-6 flex items-center justify-center text-base bg-arena-bg/70 rounded-full">
+                    {agent.avatar}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
