@@ -44,6 +44,24 @@
     @apply bg-arena-bg text-white m-0 p-0 min-h-screen;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-arena-bg;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-arena-card rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-arena-accent/50;
+  }
 }
 
 @layer components {
@@ -58,7 +76,7 @@
   }
 
   .neon-text {
-    @apply text-transparent bg-clip-text bg-gradient-to-r from-arena-accent to-arena-accent2;
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-arena-accent to-arena-accent2 font-bold;
     text-shadow: 0 0 5px rgba(17, 231, 218, 0.3);
   }
 
@@ -71,6 +89,101 @@
   }
 
   .glass-card {
-    @apply bg-arena-card/75 backdrop-blur-sm border border-white/10 rounded-lg shadow-lg;
+    @apply bg-arena-card/75 backdrop-blur-sm border border-white/10 rounded-lg shadow-xl;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.2), 0 0 15px -3px rgba(17, 231, 218, 0.1);
+  }
+  
+  .glow-effect {
+    @apply relative;
+  }
+  
+  .glow-effect::before {
+    content: '';
+    @apply absolute -inset-0.5 bg-gradient-to-r from-arena-accent to-arena-accent2 rounded-lg blur opacity-30;
+    z-index: -1;
+  }
+  
+  /* 3D Card effect */
+  .card-3d {
+    @apply transition-all duration-300;
+    transform: perspective(1000px) rotateX(0) rotateY(0);
+    transform-style: preserve-3d;
+  }
+  
+  /* Data grid styling */
+  .data-grid {
+    @apply w-full border border-white/10 rounded-lg overflow-hidden;
+  }
+  
+  .data-grid-header {
+    @apply bg-arena-card/80 backdrop-blur-sm text-sm font-medium text-arena-textMuted;
+  }
+  
+  .data-grid-row {
+    @apply border-b border-white/5 text-sm transition-colors hover:bg-white/5;
+  }
+  
+  .data-grid-cell {
+    @apply px-4 py-3;
+  }
+  
+  /* Web3 button */
+  .web3-button {
+    @apply px-4 py-2 bg-gradient-to-r from-arena-accent to-arena-accent2 text-white rounded-lg font-medium relative overflow-hidden;
+  }
+  
+  .web3-button::before {
+    content: '';
+    @apply absolute inset-0 bg-white opacity-0 transition-opacity;
+  }
+  
+  .web3-button:hover::before {
+    @apply opacity-10;
+  }
+  
+  .web3-button:active {
+    transform: translateY(1px);
+  }
+}
+
+@layer utilities {
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out;
+  }
+  
+  .animate-shuffle {
+    animation: shuffle 0.8s ease-in-out;
+  }
+  
+  .animate-reveal {
+    animation: reveal 0.5s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scale-in 0.3s ease-out;
+  }
+  
+  .animate-flicker {
+    animation: flicker 3s linear infinite;
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+    100% {
+      transform: translateY(0px);
+    }
   }
 }

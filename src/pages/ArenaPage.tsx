@@ -82,7 +82,7 @@ const ArenaPage = () => {
       
       // Animate leaderboard to show changes
       setIsLeaderboardAnimating(true);
-      setTimeout(() => setIsLeaderboardAnimating(false), 500);
+      setTimeout(() => setIsLeaderboardAnimating(false), 1000);
     }
     
     // Check if this was the last candle
@@ -135,65 +135,74 @@ const ArenaPage = () => {
   };
   
   return (
-    <div className="min-h-screen bg-arena-bg">
+    <div className="min-h-screen bg-arena-bg overflow-x-hidden">
       <NavBar />
       
       <div className="container mx-auto px-4 py-6 max-w-7xl">
-        <h1 className="text-3xl font-bold mb-4">
-          <span className="neon-text">AI Arena</span> Trading Championship
-        </h1>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-2">
-            <PriceChart 
-              candles={candles}
-              onCandleReveal={handleCandleReveal}
-              isRevealing={isGameRunning}
-              currentRound={currentRound}
-            />
+        <div className="grid grid-cols-1 gap-6 mb-6">
+          {/* Leaderboard at the top for maximum visibility */}
+          <div className="glass-card">
+            <div className="p-4 border-b border-white/10 flex items-center justify-between">
+              <h2 className="text-xl font-bold neon-text">Live Leaderboard</h2>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-arena-textMuted">Round:</span>
+                <span className="px-3 py-1 bg-arena-card rounded-full text-arena-accent font-medium">{currentRound}/5</span>
+              </div>
+            </div>
+            <Leaderboard agents={agents} isAnimating={isLeaderboardAnimating} />
           </div>
           
-          <div>
-            <GameControls 
-              onStartRound={startRound}
-              onRevealCandle={revealNextCandle}
-              isGameRunning={isGameRunning}
-              isRoundComplete={isRoundComplete}
-              currentRound={currentRound}
-              revealedCandles={candles.filter(c => c.revealed).length}
-              totalCandles={candles.length}
-              isLastRound={currentRound === 5}
-            />
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2">
-            <h2 className="text-xl font-bold mb-3 neon-text">AI Agents</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              {agents.map((agent, index) => (
-                <AgentCard 
-                  key={agent.id}
-                  name={agent.name}
-                  balance={agent.balance}
-                  position={agent.position}
-                  positionSize={agent.positionSize}
-                  avatar={agent.avatar}
-                  index={index}
-                  pnlPercent={agent.pnlPercent}
-                />
-              ))}
+          {/* Main game area */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="lg:col-span-3">
+              <PriceChart 
+                candles={candles}
+                onCandleReveal={handleCandleReveal}
+                isRevealing={isGameRunning}
+                currentRound={currentRound}
+              />
             </div>
             
-            <h2 className="text-xl font-bold mb-3 neon-text">Trade Logs</h2>
-            <div className="h-[400px]">
-              <TradeLogs logs={tradeLogs} />
+            <div>
+              <GameControls 
+                onStartRound={startRound}
+                onRevealCandle={revealNextCandle}
+                isGameRunning={isGameRunning}
+                isRoundComplete={isRoundComplete}
+                currentRound={currentRound}
+                revealedCandles={candles.filter(c => c.revealed).length}
+                totalCandles={candles.length}
+                isLastRound={currentRound === 5}
+              />
             </div>
           </div>
           
+          {/* Agents in a single row */}
           <div>
-            <h2 className="text-xl font-bold mb-3 neon-text">Live Leaderboard</h2>
-            <Leaderboard agents={agents} isAnimating={isLeaderboardAnimating} />
+            <h2 className="text-xl font-bold mb-3 neon-text">AI Agents</h2>
+            <div className="flex overflow-x-auto pb-4 gap-4 snap-x">
+              {agents.map((agent, index) => (
+                <div key={agent.id} className="min-w-[280px] snap-center">
+                  <AgentCard 
+                    name={agent.name}
+                    balance={agent.balance}
+                    position={agent.position}
+                    positionSize={agent.positionSize}
+                    avatar={agent.avatar}
+                    index={index}
+                    pnlPercent={agent.pnlPercent}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Trade logs */}
+          <div>
+            <h2 className="text-xl font-bold mb-3 neon-text">Trade Logs</h2>
+            <div className="h-[300px]">
+              <TradeLogs logs={tradeLogs} />
+            </div>
           </div>
         </div>
       </div>
