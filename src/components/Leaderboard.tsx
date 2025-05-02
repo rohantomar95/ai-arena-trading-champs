@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 
 interface Agent {
@@ -86,95 +85,87 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
     return 'bg-gradient-to-r from-blue-900 to-blue-800';
   };
 
-  // Get transition style for position changes
-  const getTransitionStyle = (agentId: string) => {
-    if (!isAnimating || !positionChanges[agentId]) {
-      return {};
-    }
-    
-    const prevIndex = prevSortedAgents.findIndex(a => a.id === agentId);
-    const currentIndex = sortedAgents.findIndex(a => a.id === agentId);
-    
-    if (prevIndex === -1 || currentIndex === -1) {
-      return {};
-    }
-    
-    // Calculate the position difference
-    const positionDiff = (currentIndex - prevIndex) * 48; // 48px is roughly the height of each row
-    
-    return {
-      transform: `translateY(${positionDiff}px)`,
-      transition: 'transform 1s ease-in-out'
-    };
-  };
-
   return (
     <div className="p-4 space-y-3">
-      {sortedAgents.map((agent, index) => {
-        const isProfitable = agent.pnlPercent >= 0;
-        const barWidth = `${Math.max(5, (agent.balance / maxBalance) * 100)}%`; // Min 5% width for visibility
-        const hasPositionChanged = positionChanges[agent.id];
-        
-        return (
-          <div 
-            key={agent.id}
-            className={`relative transition-all duration-1000 ease-in-out ${
-              hasPositionChanged ? 'position-changed' : ''
-            }`}
-            style={getTransitionStyle(agent.id)}
-          >
-            <div className="flex items-center h-12">
-              {/* Position rank */}
-              <div className="w-8 flex justify-center items-center">
-                <span className={`font-mono font-bold text-lg ${index < 3 ? 'text-yellow-400' : 'text-white/70'}`}>
-                  {index + 1}
-                </span>
-              </div>
-              
-              {/* Agent name */}
-              <div className="w-1/4 flex items-center gap-2">
-                <div className="h-8 w-8 flex items-center justify-center text-base bg-arena-bg/70 rounded-full">
-                  {agent.avatar}
-                </div>
-                <span className="font-bold tracking-tight">{agent.name}</span>
-              </div>
-              
-              {/* Progress bar */}
-              <div className="relative flex-1 h-6">
-                {/* Background bar */}
-                <div className="absolute inset-0 bg-arena-card/40 rounded-md"></div>
-                
-                {/* Colored progress bar */}
-                <div 
-                  className={`absolute top-0 bottom-0 left-0 rounded-md transition-all duration-1000 leaderboard-bar ${getBarColor(index, agent.pnlPercent)}`}
-                  style={{ 
-                    width: barWidth,
-                    boxShadow: index < 3 ? '0 0 15px rgba(234, 179, 8, 0.5)' : 'none'
-                  }}
-                ></div>
-                
-                {/* Balance text */}
-                <div className="absolute right-2 h-full flex items-center">
-                  <span className="text-base font-bold data-value">
-                    {formatCurrency(agent.balance)}
+      <div className="relative">
+        {sortedAgents.map((agent, index) => {
+          const isProfitable = agent.pnlPercent >= 0;
+          const barWidth = `${Math.max(5, (agent.balance / maxBalance) * 100)}%`; // Min 5% width for visibility
+          const hasPositionChanged = positionChanges[agent.id];
+          
+          // Calculate vertical position based on index
+          const verticalPosition = `${index * 3.5}rem`;
+          
+          // Get the previous position of this agent
+          const prevIndex = prevSortedAgents.findIndex(a => a.id === agent.id);
+          const prevPosition = prevIndex > -1 ? `${prevIndex * 3.5}rem` : verticalPosition;
+          
+          return (
+            <div 
+              key={agent.id}
+              className={`absolute w-full transition-all duration-1000 ease-in-out ${
+                hasPositionChanged ? 'position-changed' : ''
+              }`}
+              style={{ 
+                top: verticalPosition,
+                transform: isAnimating && hasPositionChanged ? `translateY(0)` : 'none'
+              }}
+            >
+              <div className="flex items-center h-12">
+                {/* Position rank */}
+                <div className="w-8 flex justify-center items-center">
+                  <span className={`font-mono font-bold text-lg ${index < 3 ? 'text-yellow-400' : 'text-white/70'}`}>
+                    {index + 1}
                   </span>
                 </div>
                 
-                {/* PnL percentage */}
-                <div className="absolute left-2 h-full flex items-center">
-                  <span className={`text-xs font-medium ${
-                    agent.pnlPercent > 0 ? 'text-arena-green' : 
-                    agent.pnlPercent < 0 ? 'text-arena-red' : 'text-white/70'
-                  }`}>
-                    {agent.pnlPercent > 0 ? '+' : ''}
-                    {agent.pnlPercent.toFixed(2)}%
-                  </span>
+                {/* Agent name */}
+                <div className="w-1/4 flex items-center gap-2">
+                  <div className="h-8 w-8 flex items-center justify-center text-base bg-arena-bg/70 rounded-full">
+                    {agent.avatar}
+                  </div>
+                  <span className="font-bold tracking-tight">{agent.name}</span>
+                </div>
+                
+                {/* Progress bar */}
+                <div className="relative flex-1 h-6">
+                  {/* Background bar */}
+                  <div className="absolute inset-0 bg-arena-card/40 rounded-md"></div>
+                  
+                  {/* Colored progress bar */}
+                  <div 
+                    className={`absolute top-0 bottom-0 left-0 rounded-md transition-all duration-1000 leaderboard-bar ${getBarColor(index, agent.pnlPercent)}`}
+                    style={{ 
+                      width: barWidth,
+                      boxShadow: index < 3 ? '0 0 15px rgba(234, 179, 8, 0.5)' : 'none'
+                    }}
+                  ></div>
+                  
+                  {/* Balance text */}
+                  <div className="absolute right-2 h-full flex items-center">
+                    <span className="text-base font-bold data-value">
+                      {formatCurrency(agent.balance)}
+                    </span>
+                  </div>
+                  
+                  {/* PnL percentage */}
+                  <div className="absolute left-2 h-full flex items-center">
+                    <span className={`text-xs font-medium ${
+                      agent.pnlPercent > 0 ? 'text-arena-green' : 
+                      agent.pnlPercent < 0 ? 'text-arena-red' : 'text-white/70'
+                    }`}>
+                      {agent.pnlPercent > 0 ? '+' : ''}
+                      {agent.pnlPercent.toFixed(2)}%
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
+      {/* This empty space ensures the container has proper height */}
+      <div style={{ height: `${sortedAgents.length * 3.5}rem` }}></div>
     </div>
   );
 };

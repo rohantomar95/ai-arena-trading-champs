@@ -73,23 +73,19 @@
 /* Leader position change animation */
 @keyframes position-change {
   0% { 
-    transform: translateX(0); 
+    transform: translateY(-100%);
     opacity: 0.7;
   }
   25% { 
-    transform: translateX(10px); 
-    opacity: 0.9;
-  }
-  50% { 
-    transform: translateX(-10px); 
-    opacity: 1;
+    transform: translateY(-50%); 
+    opacity: 0.8;
   }
   75% { 
-    transform: translateX(5px); 
+    transform: translateY(50%); 
     opacity: 0.9;
   }
   100% { 
-    transform: translateX(0); 
+    transform: translateY(100%); 
     opacity: 1;
   }
 }
@@ -173,7 +169,7 @@
 
 /* Leaderboard position change animation */
 .position-changed {
-  animation: position-change 0.8s ease-in-out;
+  animation: position-change 1.5s ease-in-out;
 }
 
 /* Make sure charts look good */
