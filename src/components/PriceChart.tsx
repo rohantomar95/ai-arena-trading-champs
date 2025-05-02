@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { 
   LineChart, 
@@ -125,6 +124,7 @@ const PriceChart: React.FC<PriceChartProps> = ({
         color: candle.close > candle.open ? "#11E7DA" : "#ea384c",
         gain: candle.close > candle.open ? candle.close - candle.open : 0,
         loss: candle.close <= candle.open ? candle.open - candle.close : 0,
+        strokeColor: candle.close > candle.open ? "#11E7DA" : "#ea384c",
       }));
   }, [candles]);
 
@@ -392,7 +392,7 @@ const PriceChart: React.FC<PriceChartProps> = ({
                 <Bar 
                   dataKey={d => Math.abs(d.high - d.low)} 
                   fill="transparent"
-                  stroke={(d) => d.close >= d.open ? "#11E7DA" : "#ea384c"}
+                  stroke="rgba(255,255,255,0.1)" // Fixed: Use a static string instead of a function
                   shape={<CustomCandle />}
                 />
                 
