@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 
 interface Agent {
@@ -23,6 +24,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
   // Track previous positions to detect changes
   const previousPositionsRef = useRef<{[key: string]: number}>({});
   const [positionChanges, setPositionChanges] = useState<{[key: string]: boolean}>({});
+  const [prevSortedAgents, setPrevSortedAgents] = useState<Agent[]>([]);
   
   // On first render, initialize previous positions
   useEffect(() => {
@@ -31,6 +33,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
       positions[agent.id] = index;
     });
     previousPositionsRef.current = positions;
+    setPrevSortedAgents(sortedAgents);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   
   // Check for position changes
@@ -52,6 +55,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
       
       // Update position changes and previous positions
       setPositionChanges(changes);
+      setPrevSortedAgents([...sortedAgents]);
       previousPositionsRef.current = currentPositions;
     }
   }, [sortedAgents, isAnimating]);
@@ -82,6 +86,28 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
     return 'bg-gradient-to-r from-blue-900 to-blue-800';
   };
 
+  // Get transition style for position changes
+  const getTransitionStyle = (agentId: string) => {
+    if (!isAnimating || !positionChanges[agentId]) {
+      return {};
+    }
+    
+    const prevIndex = prevSortedAgents.findIndex(a => a.id === agentId);
+    const currentIndex = sortedAgents.findIndex(a => a.id === agentId);
+    
+    if (prevIndex === -1 || currentIndex === -1) {
+      return {};
+    }
+    
+    // Calculate the position difference
+    const positionDiff = (currentIndex - prevIndex) * 48; // 48px is roughly the height of each row
+    
+    return {
+      transform: `translateY(${positionDiff}px)`,
+      transition: 'transform 1s ease-in-out'
+    };
+  };
+
   return (
     <div className="p-4 space-y-3">
       {sortedAgents.map((agent, index) => {
@@ -92,13 +118,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
         return (
           <div 
             key={agent.id}
-            className={`relative ${
-              isAnimating ? 'animate-shuffle' : 'transition-all duration-1000 ease-out'
-            } ${hasPositionChanged ? 'position-changed' : ''}`}
-            style={{ 
-              animationDuration: '0.8s', 
-              animationDelay: `${index * 0.05}s` 
-            }}
+            className={`relative transition-all duration-1000 ease-in-out ${
+              hasPositionChanged ? 'position-changed' : ''
+            }`}
+            style={getTransitionStyle(agent.id)}
           >
             <div className="flex items-center h-12">
               {/* Position rank */}

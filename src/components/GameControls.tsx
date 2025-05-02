@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 
 interface GameControlsProps {
@@ -23,9 +23,42 @@ const GameControls: React.FC<GameControlsProps> = ({
   totalCandles,
   isLastRound
 }) => {
+  const [commentary, setCommentary] = useState<string>("Welcome to the AI Arena Trading Championship!");
+  
+  // Update commentary based on game state
+  useEffect(() => {
+    if (!isGameRunning && !isRoundComplete) {
+      if (currentRound === 1) {
+        setCommentary("Agents are ready to trade! Start Round 1 to begin the championship.");
+      } else {
+        setCommentary(`Round ${currentRound - 1} complete! Prepare for Round ${currentRound}.`);
+      }
+    } else if (isGameRunning && revealedCandles === 0) {
+      setCommentary(`Round ${currentRound} has begun! AI agents are placing their trades.`);
+    } else if (isGameRunning && revealedCandles > 0) {
+      const remaining = totalCandles - revealedCandles;
+      if (remaining > 1) {
+        setCommentary(`Market is moving! ${remaining} candles remaining.`);
+      } else if (remaining === 1) {
+        setCommentary("Final candle approaching! Positions will close soon.");
+      }
+    } else if (isRoundComplete) {
+      if (isLastRound) {
+        setCommentary("Championship complete! Final results are in.");
+      } else {
+        setCommentary(`Round ${currentRound} complete! Agents are analyzing the next market cycle.`);
+      }
+    }
+  }, [isGameRunning, isRoundComplete, currentRound, revealedCandles, totalCandles, isLastRound]);
+  
   return (
     <div className="glass-card p-4 flex flex-col space-y-4 animate-fade-in">
       <h2 className="text-xl font-bold">Game Controls</h2>
+      
+      {/* Commentary section */}
+      <div className="p-3 border border-arena-accent/20 bg-white/5 rounded-md">
+        <p className="text-sm flicker-text font-medium">{commentary}</p>
+      </div>
       
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
