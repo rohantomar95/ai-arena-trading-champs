@@ -1,5 +1,13 @@
 
 import React, { useMemo } from 'react';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
 
 interface TradeLog {
   id: string;
@@ -25,11 +33,6 @@ const TradeLogs: React.FC<TradeLogsProps> = ({ logs }) => {
     }).format(value);
   };
   
-  const formatTime = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString();
-  };
-  
   // Group logs by round
   const logsByRound = useMemo(() => {
     const grouped: { [key: number]: TradeLog[] } = {};
@@ -46,13 +49,14 @@ const TradeLogs: React.FC<TradeLogsProps> = ({ logs }) => {
       }
     });
     
-    // Sort logs within each round by timestamp (newest first)
-    Object.keys(grouped).forEach(round => {
-      grouped[Number(round)].sort((a, b) => b.timestamp - a.timestamp);
-    });
-    
     return grouped;
   }, [logs]);
+  
+  const getActionClassName = (action: string) => {
+    if (action === 'long') return 'bg-arena-green/20 text-arena-green px-2 py-0.5 rounded text-xs font-medium';
+    if (action === 'short') return 'bg-arena-red/20 text-arena-red px-2 py-0.5 rounded text-xs font-medium';
+    return 'bg-white/10 text-white px-2 py-0.5 rounded text-xs font-medium';
+  };
   
   return (
     <div className="h-full overflow-hidden">
@@ -69,31 +73,38 @@ const TradeLogs: React.FC<TradeLogsProps> = ({ logs }) => {
                 
                 <div className="p-2">
                   {roundLogs.length > 0 ? (
-                    <div className="grid gap-2">
-                      {roundLogs.map((log) => (
-                        <div 
-                          key={log.id}
-                          className="p-3 border border-white/5 rounded-md bg-arena-bg/30 animate-scale-in"
-                          style={{ animationDuration: '0.3s' }}
-                        >
-                          <div className="flex justify-between items-center">
-                            <span className="font-medium text-white">{log.agentName}</span>
-                            <span className="text-sm text-arena-textMuted">{formatTime(log.timestamp)}</span>
-                          </div>
-                          
-                          <div className="flex justify-between mt-1">
-                            <span className={`font-medium ${
-                              log.action === 'long' ? 'text-arena-green' : 
-                              log.action === 'short' ? 'text-arena-red' : 'text-white'
-                            }`}>
-                              {log.action === 'long' ? 'OPENED LONG' : 
-                               log.action === 'short' ? 'OPENED SHORT' : 'CLOSED POSITION'} @ ${log.price.toFixed(2)}
-                            </span>
-                            <span className="text-sm font-medium">{formatCurrency(log.amount)}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-white/10 hover:bg-transparent">
+                          <TableHead className="text-white">Agent</TableHead>
+                          <TableHead className="text-white">Action</TableHead>
+                          <TableHead className="text-white text-right">Amount</TableHead>
+                          <TableHead className="text-white text-right">Price</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {roundLogs.map((log) => (
+                          <TableRow 
+                            key={log.id} 
+                            className="border-white/5 hover:bg-arena-bg/50 animate-scale-in"
+                            style={{ animationDuration: '0.3s' }}
+                          >
+                            <TableCell className="font-medium">{log.agentName}</TableCell>
+                            <TableCell>
+                              <span className={getActionClassName(log.action)}>
+                                {log.action.toUpperCase()}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right font-medium tabular-nums">
+                              {formatCurrency(log.amount)}
+                            </TableCell>
+                            <TableCell className="text-right font-mono">
+                              ${log.price.toFixed(2)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   ) : (
                     <div className="p-4 text-center text-arena-textMuted">
                       No trades in Round {round} yet

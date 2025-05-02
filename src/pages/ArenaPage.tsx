@@ -139,7 +139,7 @@ const ArenaPage = () => {
       <NavBar />
       
       <div className="container mx-auto px-4 py-6 max-w-7xl">
-        <div className="grid grid-cols-1 gap-6 mb-6">
+        <div className="grid grid-cols-1 gap-6">
           {/* 1. Price Chart at the top */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-3">
