@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { CountUp } from 'countup.js';
 
@@ -25,6 +26,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
   const previousPositionsRef = useRef<{[key: string]: number}>({});
   const [positionChanges, setPositionChanges] = useState<{[key: string]: boolean}>({});
   const [prevSortedAgents, setPrevSortedAgents] = useState<Agent[]>([]);
+  const [isReady, setIsReady] = useState<boolean>(false);
 
   // References for number animations
   const balanceRefs = useRef<{[key: string]: HTMLSpanElement | null}>({});
@@ -40,91 +42,106 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
     });
     previousPositionsRef.current = positions;
     setPrevSortedAgents(sortedAgents);
+    
+    // Mark component as ready after initial setup
+    setIsReady(true);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   
-  // Check for position changes
+  // Check for position changes - only when component is ready
   useEffect(() => {
-    // Only update when the component is not already animating
+    if (!isReady) return;
+    
+    // Only update when the component is animating (triggered externally)
     if (isAnimating) {
-      const changes: {[key: string]: boolean} = {};
-      const currentPositions: {[key: string]: number} = {};
-      
-      // Record current positions
-      sortedAgents.forEach((agent, index) => {
-        currentPositions[agent.id] = index;
+      try {
+        const changes: {[key: string]: boolean} = {};
+        const currentPositions: {[key: string]: number} = {};
         
-        // Check if position changed
-        if (previousPositionsRef.current[agent.id] !== undefined && 
-            previousPositionsRef.current[agent.id] !== index) {
-          changes[agent.id] = true;
-        }
-      });
-      
-      // Update position changes and previous positions
-      setPositionChanges(changes);
-      setPrevSortedAgents([...sortedAgents]);
-      previousPositionsRef.current = currentPositions;
+        // Record current positions
+        sortedAgents.forEach((agent, index) => {
+          currentPositions[agent.id] = index;
+          
+          // Check if position changed
+          if (previousPositionsRef.current[agent.id] !== undefined && 
+              previousPositionsRef.current[agent.id] !== index) {
+            changes[agent.id] = true;
+          }
+        });
+        
+        // Update position changes and previous positions
+        setPositionChanges(changes);
+        setPrevSortedAgents([...sortedAgents]);
+        previousPositionsRef.current = currentPositions;
+      } catch (error) {
+        console.error("Error handling position changes:", error);
+      }
     }
-  }, [sortedAgents, isAnimating]);
+  }, [sortedAgents, isAnimating, isReady]);
   
   // Initialize and update counters for balance animations - safely
   useEffect(() => {
+    if (!isReady) return;
+    
     // Clean up existing counters to prevent memory leaks
     const currentBalanceCounters = balanceCounters.current;
     const currentPnlCounters = pnlCounters.current;
     
     // Setup new counters only after the component is fully mounted
     const setupCounters = () => {
-      sortedAgents.forEach(agent => {
-        const balanceElement = balanceRefs.current[agent.id];
-        const pnlElement = pnlRefs.current[agent.id];
-        
-        if (balanceElement) {
-          try {
-            if (currentBalanceCounters[agent.id]) {
-              currentBalanceCounters[agent.id]?.update(agent.balance);
-            } else {
-              currentBalanceCounters[agent.id] = new CountUp(balanceElement, agent.balance, {
-                duration: 1.5,
-                prefix: '$',
-                separator: ',',
-                decimal: '.',
-                decimalPlaces: 0
-              });
-              currentBalanceCounters[agent.id]?.start();
+      try {
+        sortedAgents.forEach(agent => {
+          const balanceElement = balanceRefs.current[agent.id];
+          const pnlElement = pnlRefs.current[agent.id];
+          
+          if (balanceElement) {
+            try {
+              if (currentBalanceCounters[agent.id]) {
+                currentBalanceCounters[agent.id]?.update(agent.balance);
+              } else {
+                currentBalanceCounters[agent.id] = new CountUp(balanceElement, agent.balance, {
+                  duration: 1.5,
+                  prefix: '$',
+                  separator: ',',
+                  decimal: '.',
+                  decimalPlaces: 0
+                });
+                currentBalanceCounters[agent.id]?.start();
+              }
+            } catch (err) {
+              console.warn('Could not animate balance counter:', err);
             }
-          } catch (err) {
-            console.warn('Could not animate balance counter:', err);
           }
-        }
-        
-        if (pnlElement) {
-          try {
-            if (currentPnlCounters[agent.id]) {
-              currentPnlCounters[agent.id]?.update(agent.pnlPercent);
-            } else {
-              currentPnlCounters[agent.id] = new CountUp(pnlElement, agent.pnlPercent, {
-                duration: 1.5,
-                decimalPlaces: 2,
-                suffix: '%',
-                prefix: agent.pnlPercent >= 0 ? '+' : ''
-              });
-              currentPnlCounters[agent.id]?.start();
+          
+          if (pnlElement) {
+            try {
+              if (currentPnlCounters[agent.id]) {
+                currentPnlCounters[agent.id]?.update(agent.pnlPercent);
+              } else {
+                currentPnlCounters[agent.id] = new CountUp(pnlElement, agent.pnlPercent, {
+                  duration: 1.5,
+                  decimalPlaces: 2,
+                  suffix: '%',
+                  prefix: agent.pnlPercent >= 0 ? '+' : ''
+                });
+                currentPnlCounters[agent.id]?.start();
+              }
+            } catch (err) {
+              console.warn('Could not animate PnL counter:', err);
             }
-          } catch (err) {
-            console.warn('Could not animate PnL counter:', err);
           }
-        }
-      });
+        });
+      } catch (error) {
+        console.error("Error setting up counters:", error);
+      }
     };
     
     // Use a small delay to ensure DOM is ready
-    const timerId = setTimeout(setupCounters, 50);
+    const timerId = setTimeout(setupCounters, 100);
     
     return () => {
       clearTimeout(timerId);
     };
-  }, [sortedAgents]);
+  }, [sortedAgents, isReady]);
   
   // Calculate the maximum balance for scaling bars
   const maxBalance = Math.max(...sortedAgents.map(a => a.balance));
@@ -143,6 +160,11 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
     // Neutral
     return 'bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700';
   };
+
+  // Don't render until ready to prevent DOM errors
+  if (!isReady) {
+    return <div className="p-4 space-y-3">Loading leaderboard...</div>;
+  }
 
   return (
     <div className="p-4 space-y-3">
@@ -212,7 +234,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                   <div className="absolute right-2 h-full flex items-center">
                     <span 
                       className="text-base font-bold data-value tabular-nums"
-                      ref={el => balanceRefs.current[agent.id] = el}
+                      ref={el => { 
+                        if (el) balanceRefs.current[agent.id] = el;
+                      }}
                     >
                       ${agent.balance.toLocaleString()}
                     </span>
@@ -225,7 +249,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                         agent.pnlPercent > 0 ? 'text-arena-green' : 
                         agent.pnlPercent < 0 ? 'text-arena-red' : 'text-white/70'
                       }`}
-                      ref={el => pnlRefs.current[agent.id] = el}
+                      ref={el => {
+                        if (el) pnlRefs.current[agent.id] = el;
+                      }}
                     >
                       {agent.pnlPercent > 0 ? '+' : ''}
                       {agent.pnlPercent.toFixed(2)}%
