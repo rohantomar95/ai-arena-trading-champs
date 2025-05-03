@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import NavBar from '@/components/NavBar';
 import PriceChart from '@/components/PriceChart';
@@ -254,11 +253,6 @@ const ArenaPage = () => {
               <div className="flex items-center">
                 <div className="w-1.5 h-8 bg-gradient-to-b from-arena-accent/70 to-arena-accent2/70 rounded-full mr-3"></div>
                 <h3 className="text-xl font-medium text-white/90">ETH/USD Price Chart</h3>
-                {selectedRound !== currentRound && (
-                  <span className="ml-3 px-2.5 py-0.5 text-xs bg-arena-accent/10 text-arena-accent/90 rounded-full border border-arena-accent/20">
-                    Viewing Round {selectedRound}
-                  </span>
-                )}
                 
                 {/* Championship Progress moved here */}
                 <div className="flex items-center gap-4 ml-6 pl-6 border-l border-white/10">
