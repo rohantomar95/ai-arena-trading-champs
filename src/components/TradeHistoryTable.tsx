@@ -8,8 +8,21 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { Agent, TradeLog } from '@/lib/gameData';
+import { TradeLog } from '@/lib/gameData';
 import { cn } from "@/lib/utils";
+
+// Updated Agent interface to include isUser property
+interface Agent {
+  id: string;
+  name: string;
+  avatar: string;
+  balance: number;
+  initialBalance: number;
+  position: 'long' | 'short' | null;
+  positionSize: number;
+  pnlPercent: number;
+  isUser?: boolean; // Added isUser property
+}
 
 interface TradeHistoryTableProps {
   agents: Agent[];
