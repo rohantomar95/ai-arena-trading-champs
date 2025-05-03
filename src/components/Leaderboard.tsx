@@ -177,7 +177,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
       <div className="p-4 space-y-3">
         <div className="animate-pulse flex flex-col space-y-2">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-white/5 rounded"></div>
+            <div key={i} className="h-20 bg-white/5 rounded"></div>
           ))}
         </div>
       </div>
@@ -196,15 +196,15 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
             <div 
               key={`${agent.id}-${index}`}
               className={cn(
-                "flex items-center h-16 rounded-xl p-0.5 transition-all duration-300",
+                "flex items-center h-24 rounded-xl p-0.5 transition-all duration-300",
                 agent.isUser ? "bg-gradient-to-r from-arena-accent/50 to-arena-accent2/50 shadow-lg shadow-arena-accent/10" : "hover:bg-white/5"
               )}
             >
               <div className="w-full h-full bg-arena-bg/95 rounded-lg flex items-center px-1">
                 {/* Position rank with badge effect */}
-                <div className="w-10 flex justify-center items-center">
+                <div className="w-12 flex justify-center items-center">
                   <div className={cn(
-                    "w-7 h-7 flex items-center justify-center rounded-full text-sm font-bold",
+                    "w-8 h-8 flex items-center justify-center rounded-full text-base font-bold",
                     getPositionBadgeStyle(index)
                   )}>
                     {index + 1}
@@ -212,41 +212,41 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                 </div>
                 
                 {/* Agent name with avatar */}
-                <div className="w-[120px] flex items-center gap-2">
-                  <div className={`h-8 w-8 flex items-center justify-center text-base rounded-full bg-gradient-to-r ${agentGradient} shadow-sm`}>
-                    {agent.isUser ? <CircleUser className="h-4 w-4 text-white" /> : agent.avatar}
+                <div className="w-[150px] flex items-center gap-3">
+                  <div className={`h-10 w-10 flex items-center justify-center text-lg rounded-full bg-gradient-to-r ${agentGradient} shadow-sm`}>
+                    {agent.isUser ? <CircleUser className="h-5 w-5 text-white" /> : agent.avatar}
                   </div>
                   <div className="flex flex-col">
                     <div className={cn(
-                      "font-bold tracking-tight truncate transition-colors flex items-center gap-1.5",
+                      "font-bold text-lg tracking-tight truncate transition-colors flex items-center gap-1.5",
                       agent.isUser ? "text-white" : "text-white/90"
                     )}>
-                      <span className="truncate max-w-[80px]">{agent.name}</span>
+                      <span className="truncate max-w-[100px]">{agent.name}</span>
                     </div>
                     {agent.isUser && (
-                      <span className="text-xs text-arena-accent/80">Your Agent</span>
+                      <span className="text-sm text-arena-accent/80">Your Agent</span>
                     )}
                   </div>
                 </div>
                 
                 {/* Position tag - IMPROVED SPACING */}
-                <div className="w-[200px] flex items-center">
+                <div className="w-[220px] flex items-center">
                   {getPositionTag(agent.position, agent.positionSize, agent.entryPrice)}
                 </div>
                 
                 {/* Progress bar - use shadcn Progress component */}
-                <div className="relative flex-1 h-10 flex items-center">
+                <div className="relative flex-1 h-16 flex items-center">
                   <Progress 
-                    className="h-3 bg-white/5" 
+                    className="h-6 bg-white/5" 
                     value={(agent.balance / maxBalance) * 100}
                     // Use agent's color for the progress indicator
                     indicatorClassName={`bg-gradient-to-r ${agentGradient}`}
                   />
                   
                   {/* Balance text */}
-                  <div className="absolute right-2 h-full flex items-center">
+                  <div className="absolute right-3 h-full flex items-center">
                     <span 
-                      className="text-base font-bold data-value tabular-nums"
+                      className="text-lg font-bold data-value tabular-nums"
                       ref={el => { 
                         if (el) balanceRefs.current[agent.id] = el;
                       }}
@@ -256,9 +256,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                   </div>
                   
                   {/* PnL percentage */}
-                  <div className="absolute left-2 h-full flex items-center">
+                  <div className="absolute left-3 h-full flex items-center">
                     <span 
-                      className={`text-sm font-medium ${
+                      className={`text-base font-medium ${
                         agent.pnlPercent > 0 ? 'text-arena-green' : 
                         agent.pnlPercent < 0 ? 'text-arena-red' : 'text-white/70'
                       }`}
