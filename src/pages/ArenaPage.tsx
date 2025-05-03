@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import NavBar from '@/components/NavBar';
 import AgentCard from '@/components/AgentCard';
 import PriceChart from '@/components/PriceChart';
 import Leaderboard from '@/components/Leaderboard';
 import TradeLogs from '@/components/TradeLogs';
+import TradeHistoryTable from '@/components/TradeHistoryTable';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { 
