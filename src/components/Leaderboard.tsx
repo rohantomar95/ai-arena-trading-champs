@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { CountUp } from 'countup.js';
 import { ArrowUp, ArrowDown, CircleUser } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
@@ -60,12 +60,61 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
       : sorted;
   }, [agents]);
   
+  // Store previous sorted order to compare for position changes
+  const prevSortedAgentsRef = useRef<Agent[]>([]);
+  
+  // Store previous balance values for continuity in animations
+  const prevBalancesRef = useRef<{[key: string]: number}>({});
+  const prevPnlRef = useRef<{[key: string]: number}>({});
+  
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [key, setKey] = useState<number>(0);
   
   // References for balance elements
   const balanceRefs = React.useRef<{[key: string]: HTMLSpanElement | null}>({});
   const pnlRefs = React.useRef<{[key: string]: HTMLSpanElement | null}>({});
+  
+  // Map to track position changes for animation
+  const [positionChanged, setPositionChanged] = useState<{[key: string]: boolean}>({});
+  
+  // Effect to detect position changes
+  useEffect(() => {
+    if (prevSortedAgentsRef.current.length > 0) {
+      const newPositions: {[key: string]: boolean} = {};
+      
+      // Map old positions by agent ID
+      const oldPositions = new Map<string, number>();
+      prevSortedAgentsRef.current.forEach((agent, idx) => {
+        oldPositions.set(agent.id, idx);
+      });
+      
+      // Compare with new positions
+      sortedAgents.forEach((agent, idx) => {
+        const oldIdx = oldPositions.get(agent.id);
+        if (oldIdx !== undefined && oldIdx !== idx) {
+          newPositions[agent.id] = true;
+        }
+      });
+      
+      if (Object.keys(newPositions).length > 0) {
+        setPositionChanged(newPositions);
+        
+        // Clear position changed flags after animation completes
+        setTimeout(() => {
+          setPositionChanged({});
+        }, 1500); // Animation duration
+      }
+    }
+    
+    // Update ref with current agents for next comparison
+    prevSortedAgentsRef.current = [...sortedAgents];
+    
+    // Store current balances for next animation
+    sortedAgents.forEach(agent => {
+      prevBalancesRef.current[agent.id] = agent.balance;
+      prevPnlRef.current[agent.id] = agent.pnlPercent;
+    });
+  }, [sortedAgents]);
   
   // Reset animation when agents change or animation is triggered
   useEffect(() => {
@@ -89,10 +138,20 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
     
     sortedAgents.forEach(agent => {
       try {
-        // Balance animation
+        // Get previous values or use current as fallback
+        const prevBalance = prevBalancesRef.current[agent.id] !== undefined 
+          ? prevBalancesRef.current[agent.id] 
+          : agent.balance;
+          
+        const prevPnl = prevPnlRef.current[agent.id] !== undefined 
+          ? prevPnlRef.current[agent.id] 
+          : agent.pnlPercent;
+        
+        // Balance animation - start from previous value
         const balanceEl = balanceRefs.current[agent.id];
         if (balanceEl) {
           new CountUp(balanceEl, agent.balance, {
+            startVal: prevBalance,
             duration: 1.5,
             prefix: '$',
             separator: ',',
@@ -101,10 +160,11 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
           }).start();
         }
         
-        // PNL animation
+        // PNL animation - start from previous value
         const pnlEl = pnlRefs.current[agent.id];
         if (pnlEl) {
           new CountUp(pnlEl, Math.abs(agent.pnlPercent), {
+            startVal: Math.abs(prevPnl),
             duration: 1.5,
             decimalPlaces: 2,
             suffix: '%',
@@ -191,12 +251,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
           const isProfitable = agent.pnlPercent >= 0;
           const barWidth = `${Math.max(5, (agent.balance / maxBalance) * 100)}%`; // Min 5% width for visibility
           const agentGradient = getAgentGradient(agent, index);
+          const hasPositionChanged = positionChanged[agent.id];
           
           return (
             <div 
               key={`${agent.id}-${index}`}
               className={cn(
-                "flex items-center h-24 rounded-xl p-0.5 transition-all duration-300",
+                "flex items-center h-24 rounded-xl p-0.5 transition-all duration-500",
+                hasPositionChanged ? "position-changed" : "transition-transform duration-500",
                 agent.isUser ? "bg-gradient-to-r from-arena-accent/50 to-arena-accent2/50 shadow-lg shadow-arena-accent/10" : "hover:bg-white/5"
               )}
             >
@@ -240,7 +302,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                     className="h-10 bg-white/5" 
                     value={(agent.balance / maxBalance) * 100}
                     // Use agent's color for the progress indicator
-                    indicatorClassName={`bg-gradient-to-r ${agentGradient}`}
+                    indicatorClassName={`bg-gradient-to-r ${agentGradient} transition-all duration-1000 ease-out`}
                   />
                   
                   {/* Balance text */}
