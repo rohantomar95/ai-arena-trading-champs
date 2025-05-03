@@ -5,7 +5,7 @@ import AgentCard from '@/components/AgentCard';
 import PriceChart from '@/components/PriceChart';
 import Leaderboard from '@/components/Leaderboard';
 import TradeLogs from '@/components/TradeLogs';
-import GameControls from '@/components/GameControls';
+import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { 
   initialAgents, 
@@ -184,6 +184,55 @@ const ArenaPage = () => {
   const handleCandleReveal = () => {
     revealNextCandle();
   };
+
+  // Render the game controls based on current state
+  const renderGameControls = () => {
+    if (!isGameRunning && !isRoundComplete) {
+      return (
+        <Button 
+          className="bg-gradient-to-r from-arena-accent to-arena-accent2 hover:opacity-90 transition-opacity"
+          onClick={startRound}
+        >
+          Start Round {currentRound}
+        </Button>
+      );
+    }
+    
+    if (isGameRunning && candles.filter(c => c.revealed).length < candles.length) {
+      return (
+        <Button 
+          className="bg-white/10 hover:bg-white/20 transition-colors border border-white/20"
+          onClick={revealNextCandle}
+        >
+          Reveal Next Candle
+        </Button>
+      );
+    }
+    
+    if (isRoundComplete && currentRound < 5) {
+      return (
+        <Button 
+          className="bg-gradient-to-r from-arena-accent to-arena-accent2 hover:opacity-90 transition-opacity"
+          onClick={startRound}
+        >
+          Start Next Round
+        </Button>
+      );
+    }
+    
+    if (isRoundComplete && currentRound === 5) {
+      return (
+        <Button 
+          className="bg-gradient-to-r from-arena-accent to-arena-accent2 hover:opacity-90 transition-opacity"
+          disabled
+        >
+          Game Complete
+        </Button>
+      );
+    }
+    
+    return null;
+  };
   
   return (
     <div className="min-h-screen bg-arena-bg overflow-x-hidden">
@@ -191,58 +240,40 @@ const ArenaPage = () => {
       
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         <div className="grid grid-cols-1 gap-6">
-          {/* 1. Price Chart at the top */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <div className="lg:col-span-3">
-              <PriceChart 
-                candles={candles}
-                onCandleReveal={handleCandleReveal}
-                isRevealing={isGameRunning}
-                currentRound={currentRound}
-              />
+          {/* 1. Announcements and Game Controls at the top */}
+          <div className="glass-card p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold neon-text">AI Arena Championship</h2>
+              <div className="flex items-center gap-2 bg-arena-card/80 px-4 py-2 rounded-full">
+                <span className="text-arena-textMuted">Round:</span>
+                <span className="text-lg font-bold text-arena-accent">{currentRound}/5</span>
+              </div>
             </div>
             
-            <div className="flex flex-col gap-6">
-              <GameControls 
-                onStartRound={startRound}
-                onRevealCandle={revealNextCandle}
-                isGameRunning={isGameRunning}
-                isRoundComplete={isRoundComplete}
-                currentRound={currentRound}
-                revealedCandles={candles.filter(c => c.revealed).length}
-                totalCandles={candles.length}
-                isLastRound={currentRound === 5}
-              />
+            <div className="flex flex-col md:flex-row gap-4 items-center">
+              <div className="flex-1 bg-arena-card/30 rounded-lg p-4">
+                <p className="text-lg text-center font-medium">{commentary}</p>
+              </div>
               
-              {/* Commentary section */}
-              <div className="glass-card p-4">
-                <h3 className="text-sm font-semibold text-arena-textMuted mb-2 uppercase tracking-wider">
-                  Arena Commentary
-                </h3>
-                <div className="h-20 flex items-center justify-center">
-                  <p className="commentary-text text-center text-white font-medium">
-                    {commentary}
-                  </p>
-                </div>
+              <div className="md:w-1/4 flex justify-center">
+                {renderGameControls()}
               </div>
             </div>
           </div>
           
-          {/* 2. Leaderboard below the chart */}
-          <div className="glass-card">
-            <div className="p-4 border-b border-white/10 flex items-center justify-between">
-              <h2 className="text-xl font-bold neon-text">Live Leaderboard</h2>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-arena-textMuted">Round:</span>
-                <span className="px-3 py-1 bg-arena-card rounded-full text-arena-accent font-medium">{currentRound}/5</span>
-              </div>
-            </div>
-            <Leaderboard agents={agents} isAnimating={isLeaderboardAnimating} />
-          </div>
-          
-          {/* 3. Agents in a single row */}
+          {/* 2. Price Chart */}
           <div className="glass-card p-4">
-            <h2 className="text-xl font-bold mb-3 neon-text">AI Agents</h2>
+            <PriceChart 
+              candles={candles}
+              onCandleReveal={handleCandleReveal}
+              isRevealing={isGameRunning}
+              currentRound={currentRound}
+            />
+          </div>
+          
+          {/* 3. Agent Positions Summary */}
+          <div className="glass-card p-4">
+            <h2 className="text-xl font-bold mb-4 neon-text">Current Positions</h2>
             <div className="flex overflow-x-auto pb-4 gap-4 snap-x">
               {agents.map((agent, index) => (
                 <div key={agent.id} className="min-w-[280px] snap-center">
@@ -260,12 +291,25 @@ const ArenaPage = () => {
             </div>
           </div>
           
-          {/* 4. Trade logs at the bottom */}
+          {/* 4. Leaderboard */}
           <div className="glass-card">
-            <h2 className="text-xl font-bold p-4 border-b border-white/10 neon-text">Trade History</h2>
-            <div className="h-[400px]">
-              <TradeLogs logs={tradeLogs} />
+            <div className="p-4 border-b border-white/10 flex items-center justify-between">
+              <h2 className="text-xl font-bold neon-text">Live Leaderboard</h2>
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 bg-arena-card rounded-full text-white/70 font-medium">
+                  Updated in Real-time
+                </span>
+              </div>
             </div>
+            <Leaderboard agents={agents} isAnimating={isLeaderboardAnimating} />
+          </div>
+          
+          {/* 5. Trade History in table format */}
+          <div className="glass-card">
+            <div className="p-4 border-b border-white/10">
+              <h2 className="text-xl font-bold neon-text">Trade History</h2>
+            </div>
+            <TradeHistoryTable agents={agents} logs={tradeLogs} />
           </div>
         </div>
       </div>
