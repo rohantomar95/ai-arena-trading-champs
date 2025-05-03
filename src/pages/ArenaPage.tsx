@@ -9,6 +9,7 @@ import RoundSelector from '@/components/RoundSelector';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils"; // Add this import for the cn utility
 import { 
   initialAgents, 
   initialCandles, 
