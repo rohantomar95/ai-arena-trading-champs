@@ -106,6 +106,29 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
     return agentHeaderGradients[index] || agentHeaderGradients[5];
   };
 
+  // Calculate PnL for a closed trade
+  const calculatePnL = (openTrade: TradeLog | undefined, closeTrade: TradeLog | undefined) => {
+    if (!openTrade || !closeTrade) return null;
+    
+    const openAmount = openTrade.amount;
+    const openPrice = openTrade.price;
+    const closePrice = closeTrade.price;
+    
+    // PnL calculation depends on position type
+    const isProfitable = openTrade.action === 'long' 
+      ? closePrice > openPrice 
+      : closePrice < openPrice;
+    
+    const pnlValue = openTrade.action === 'long'
+      ? openAmount * ((closePrice - openPrice) / openPrice)
+      : openAmount * ((openPrice - closePrice) / openPrice);
+    
+    return {
+      value: pnlValue,
+      isProfitable
+    };
+  };
+
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -133,7 +156,7 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
                   "px-3 py-2 rounded-md bg-gradient-to-r bg-opacity-20",
                   `bg-gradient-to-r ${getAgentHeaderGradient(agent, index)}/20`
                 )}>
-                  <div className="bg-clip-text text-transparent bg-gradient-to-r from-white to-white/80 flex items-center justify-between">
+                  <div className="bg-clip-text text-transparent bg-gradient-to-r from-white to-white/80 flex items-center">
                     <span className="truncate max-w-[100px]">{agent.name}</span>
                     {agent.isUser && 
                       <Badge className="ml-1.5 bg-white/20 hover:bg-white/30 text-white text-xs">
@@ -160,6 +183,9 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
                   const trades = getAgentTradesForRound(agent.id, roundLogs);
                   const openTrade = trades.find(t => t.action === 'long' || t.action === 'short');
                   const closeTrade = trades.find(t => t.action === 'close');
+                  
+                  // Calculate PnL if there are both open and close trades
+                  const pnl = calculatePnL(openTrade, closeTrade);
                   
                   const cellClass = cn(
                     "py-3",
@@ -203,6 +229,16 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
                                 <span className="text-arena-textMuted">Price:</span>
                                 <span className="font-mono font-medium">${closeTrade.price.toFixed(2)}</span>
                               </div>
+                              
+                              {/* Display PnL for closed trades */}
+                              {pnl && (
+                                <div className="flex justify-between text-xs mt-1">
+                                  <span className="text-arena-textMuted">PnL:</span>
+                                  <span className={`font-medium ${pnl.isProfitable ? 'text-arena-green' : 'text-arena-red'}`}>
+                                    {pnl.isProfitable ? '+' : '-'}{formatCurrency(Math.abs(pnl.value))}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>

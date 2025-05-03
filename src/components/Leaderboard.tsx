@@ -145,7 +145,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
     if (!position) return null;
     
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2.5">
         <div className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium ${
           position === 'long' ? 'bg-arena-green/20 text-arena-green' : 'bg-arena-red/20 text-arena-red'
         }`}>
@@ -177,7 +177,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
       <div className="p-4 space-y-3">
         <div className="animate-pulse flex flex-col space-y-2">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-12 bg-white/5 rounded"></div>
+            <div key={i} className="h-16 bg-white/5 rounded"></div>
           ))}
         </div>
       </div>
@@ -185,8 +185,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
   }
 
   return (
-    <div className="p-4 space-y-3" key={key}>
-      <div className="flex flex-col space-y-4">
+    <div className="p-4 space-y-4" key={key}>
+      <div className="flex flex-col space-y-5">
         {sortedAgents.map((agent, index) => {
           const isProfitable = agent.pnlPercent >= 0;
           const barWidth = `${Math.max(5, (agent.balance / maxBalance) * 100)}%`; // Min 5% width for visibility
@@ -196,7 +196,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
             <div 
               key={`${agent.id}-${index}`}
               className={cn(
-                "flex items-center h-14 rounded-xl p-0.5 transition-all duration-300",
+                "flex items-center h-16 rounded-xl p-0.5 transition-all duration-300",
                 agent.isUser ? "bg-gradient-to-r from-arena-accent/50 to-arena-accent2/50 shadow-lg shadow-arena-accent/10" : "hover:bg-white/5"
               )}
             >
@@ -222,11 +222,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                       agent.isUser ? "text-white" : "text-white/90"
                     )}>
                       <span className="truncate max-w-[80px]">{agent.name}</span>
-                      {agent.isUser && 
-                        <Badge className="bg-white/20 hover:bg-white/30 text-white text-xs">
-                          YOU
-                        </Badge>
-                      }
                     </div>
                     {agent.isUser && (
                       <span className="text-xs text-arena-accent/80">Your Agent</span>
@@ -240,9 +235,9 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                 </div>
                 
                 {/* Progress bar - use shadcn Progress component */}
-                <div className="relative flex-1 h-8 flex items-center">
+                <div className="relative flex-1 h-10 flex items-center">
                   <Progress 
-                    className="h-2.5 bg-white/5" 
+                    className="h-3 bg-white/5" 
                     value={(agent.balance / maxBalance) * 100}
                     // Use agent's color for the progress indicator
                     indicatorClassName={`bg-gradient-to-r ${agentGradient}`}
