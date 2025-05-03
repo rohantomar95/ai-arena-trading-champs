@@ -1,7 +1,9 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { CountUp } from 'countup.js';
-import { ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowUp, ArrowDown, CircleUser } from 'lucide-react';
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 interface Agent {
   id: string;
@@ -13,12 +15,35 @@ interface Agent {
   positionSize?: number;
   pnlPercent: number;
   entryPrice?: number;
+  isUser?: boolean;
 }
 
 interface LeaderboardProps {
   agents: Agent[];
   isAnimating?: boolean;
 }
+
+// Agent color palette - modern gradient definitions
+const agentColorGradients = [
+  'from-[#11E7DA] to-[#9B87F5]', // User agent (teal to purple)
+  'from-[#FFD700] to-[#FFA500]', // 1st place (gold)
+  'from-[#C0C0C0] to-[#A9A9A9]', // 2nd place (silver)
+  'from-[#CD7F32] to-[#A0522D]', // 3rd place (bronze)
+  'from-[#4158D0] to-[#C850C0]', // purple to pink
+  'from-[#0093E9] to-[#80D0C7]', // blue to teal
+  'from-[#8EC5FC] to-[#E0C3FC]', // light blue to light purple
+  'from-[#43E97B] to-[#38F9D7]', // green to teal
+  'from-[#FA8BFF] to-[#2BD2FF]', // pink to blue
+  'from-[#FBDA61] to-[#FF5ACD]', // yellow to pink
+];
+
+// Badge styles for position ranks
+const positionBadgeStyles = [
+  'bg-gradient-to-r from-yellow-300 to-yellow-500 ring-2 ring-yellow-500/50 shadow-lg shadow-yellow-500/20', // 1st
+  'bg-gradient-to-r from-gray-300 to-gray-400 ring-2 ring-gray-400/50', // 2nd
+  'bg-gradient-to-r from-amber-600 to-amber-700 ring-2 ring-amber-700/50', // 3rd
+  'bg-white/10 ring-1 ring-white/20', // Others
+];
 
 const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }) => {
   // Sort by balance descending
@@ -92,19 +117,16 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
   // Calculate the maximum balance for scaling bars
   const maxBalance = Math.max(...sortedAgents.map(a => a.balance));
   
-  // Get color for the bar based on index and profit/loss
-  const getBarColor = (index: number, pnlPercent: number) => {
-    // Top 3 get special colors
-    if (index === 0) return 'bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-300';
-    if (index === 1) return 'bg-gradient-to-r from-gray-300 via-gray-400 to-gray-200';
-    if (index === 2) return 'bg-gradient-to-r from-amber-700 via-amber-600 to-amber-500';
-    
-    // Others based on profit/loss
-    if (pnlPercent > 0) return 'bg-gradient-to-r from-arena-green/90 via-arena-green/80 to-arena-green/60';
-    if (pnlPercent < 0) return 'bg-gradient-to-r from-arena-red/90 via-arena-red/80 to-arena-red/60';
-    
-    // Neutral
-    return 'bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700';
+  // Get color gradient for the agent
+  const getAgentGradient = (agent: Agent, index: number): string => {
+    if (agent.isUser) return agentColorGradients[0];
+    if (index < 3) return agentColorGradients[index + 1];
+    return agentColorGradients[index % agentColorGradients.length];
+  };
+  
+  // Get position badge style
+  const getPositionBadgeStyle = (index: number): string => {
+    return index < 3 ? positionBadgeStyles[index] : positionBadgeStyles[3];
   };
 
   const getPositionTag = (position: 'long' | 'short' | null | undefined, size?: number, entryPrice?: number) => {
@@ -144,92 +166,91 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
 
   return (
     <div className="p-4 space-y-3" key={key}>
-      <div className="flex flex-col space-y-3">
+      <div className="flex flex-col space-y-4">
         {sortedAgents.map((agent, index) => {
           const isProfitable = agent.pnlPercent >= 0;
           const barWidth = `${Math.max(5, (agent.balance / maxBalance) * 100)}%`; // Min 5% width for visibility
+          const agentGradient = getAgentGradient(agent, index);
           
           return (
             <div 
               key={`${agent.id}-${index}`}
-              className="flex items-center h-12 group"
+              className={cn(
+                "flex items-center h-14 rounded-xl p-0.5 transition-all duration-300",
+                agent.isUser ? "bg-gradient-to-r from-arena-accent/50 to-arena-accent2/50 shadow-lg shadow-arena-accent/10" : "hover:bg-white/5"
+              )}
             >
-              {/* Position rank with badge effect */}
-              <div className={`w-8 flex justify-center items-center ${index < 3 ? 'scale-110' : ''}`}>
-                <span className={`font-mono font-bold text-lg relative ${
-                  index === 0 ? 'text-yellow-400' :
-                  index === 1 ? 'text-gray-300' :
-                  index === 2 ? 'text-amber-600' : 
-                  'text-white/70'
-                }`}>
-                  {index + 1}
-                </span>
-              </div>
-              
-              {/* Agent name with avatar */}
-              <div className="w-[120px] flex items-center gap-2">
-                <div className={`h-7 w-7 flex items-center justify-center text-base rounded-full border ${
-                  index === 0 ? 'border-yellow-400 bg-yellow-400/10' :
-                  index === 1 ? 'border-gray-300 bg-gray-300/10' :
-                  index === 2 ? 'border-amber-600 bg-amber-600/10' :
-                  'border-white/20 bg-arena-bg/70'
-                }`}>
-                  {agent.avatar}
-                </div>
-                <span className="font-bold tracking-tight truncate group-hover:text-arena-accent transition-colors">
-                  {agent.name}
-                </span>
-              </div>
-              
-              {/* Position tag */}
-              <div className="w-[200px] flex items-center">
-                {getPositionTag(agent.position, agent.positionSize, agent.entryPrice)}
-              </div>
-              
-              {/* Progress bar */}
-              <div className="relative flex-1 h-8">
-                {/* Background bar */}
-                <div className="absolute inset-0 bg-arena-card/40 rounded-md"></div>
-                
-                {/* Colored progress bar with gradient and animation */}
-                <div 
-                  className={`absolute top-0 bottom-0 left-0 rounded-md transition-all duration-700 ${getBarColor(index, agent.pnlPercent)}`}
-                  style={{ 
-                    width: barWidth,
-                    boxShadow: index < 3 ? 
-                      index === 0 ? '0 0 15px rgba(234, 179, 8, 0.6)' :
-                      index === 1 ? '0 0 12px rgba(209, 213, 219, 0.4)' :
-                      '0 0 10px rgba(217, 119, 6, 0.3)' 
-                      : 'none'
-                  }}
-                ></div>
-                
-                {/* Balance text */}
-                <div className="absolute right-2 h-full flex items-center">
-                  <span 
-                    className="text-base font-bold data-value tabular-nums"
-                    ref={el => { 
-                      if (el) balanceRefs.current[agent.id] = el;
-                    }}
-                  >
-                    ${agent.balance.toLocaleString()}
-                  </span>
+              <div className="w-full h-full bg-arena-bg/95 rounded-lg flex items-center px-1">
+                {/* Position rank with badge effect */}
+                <div className="w-10 flex justify-center items-center">
+                  <div className={cn(
+                    "w-7 h-7 flex items-center justify-center rounded-full text-sm font-bold",
+                    getPositionBadgeStyle(index)
+                  )}>
+                    {index + 1}
+                  </div>
                 </div>
                 
-                {/* PnL percentage */}
-                <div className="absolute left-2 h-full flex items-center">
-                  <span 
-                    className={`text-sm font-medium ${
-                      agent.pnlPercent > 0 ? 'text-arena-green' : 
-                      agent.pnlPercent < 0 ? 'text-arena-red' : 'text-white/70'
-                    }`}
-                    ref={el => {
-                      if (el) pnlRefs.current[agent.id] = el;
-                    }}
-                  >
-                    {agent.pnlPercent > 0 ? '+' : '-'}
-                    {Math.abs(agent.pnlPercent).toFixed(2)}%
-                  </span>
+                {/* Agent name with avatar */}
+                <div className="w-[120px] flex items-center gap-2">
+                  <div className={`h-8 w-8 flex items-center justify-center text-base rounded-full bg-gradient-to-r ${agentGradient} shadow-sm`}>
+                    {agent.isUser ? <CircleUser className="h-4 w-4 text-white" /> : agent.avatar}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className={cn(
+                      "font-bold tracking-tight truncate transition-colors",
+                      agent.isUser ? "text-white" : "text-white/90"
+                    )}>
+                      {agent.name}
+                      {agent.isUser && <span className="ml-1.5 text-xs bg-white/20 px-1.5 py-0.5 rounded-sm">YOU</span>}
+                    </span>
+                    {agent.isUser && (
+                      <span className="text-xs text-arena-accent/80">Your Agent</span>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Position tag */}
+                <div className="w-[200px] flex items-center">
+                  {getPositionTag(agent.position, agent.positionSize, agent.entryPrice)}
+                </div>
+                
+                {/* Progress bar - use shadcn Progress component */}
+                <div className="relative flex-1 h-8 flex items-center">
+                  <Progress 
+                    className="h-2.5 bg-white/5" 
+                    value={(agent.balance / maxBalance) * 100}
+                    // Use agent's color for the progress indicator
+                    indicatorClassName={`bg-gradient-to-r ${agentGradient}`}
+                  />
+                  
+                  {/* Balance text */}
+                  <div className="absolute right-2 h-full flex items-center">
+                    <span 
+                      className="text-base font-bold data-value tabular-nums"
+                      ref={el => { 
+                        if (el) balanceRefs.current[agent.id] = el;
+                      }}
+                    >
+                      ${agent.balance.toLocaleString()}
+                    </span>
+                  </div>
+                  
+                  {/* PnL percentage */}
+                  <div className="absolute left-2 h-full flex items-center">
+                    <span 
+                      className={`text-sm font-medium ${
+                        agent.pnlPercent > 0 ? 'text-arena-green' : 
+                        agent.pnlPercent < 0 ? 'text-arena-red' : 'text-white/70'
+                      }`}
+                      ref={el => {
+                        if (el) pnlRefs.current[agent.id] = el;
+                      }}
+                    >
+                      {agent.pnlPercent > 0 ? '+' : '-'}
+                      {Math.abs(agent.pnlPercent).toFixed(2)}%
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

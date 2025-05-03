@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import NavBar from '@/components/NavBar';
 import PriceChart from '@/components/PriceChart';
@@ -25,9 +26,15 @@ import { Play, RotateCcw, BookOpen } from 'lucide-react';
 import { Web3Card, Web3CardHeader, Web3CardTitle, Web3CardContent } from '@/components/ui/web3-card';
 
 const ArenaPage = () => {
+  // Mark the first agent as the user's agent
+  const agentsWithUser = initialAgents.map((agent, index) => ({
+    ...agent,
+    isUser: index === 0 // Mark the first agent as the user's agent
+  }));
+
   const [currentRound, setCurrentRound] = useState<number>(1);
   const [selectedRound, setSelectedRound] = useState<number>(1);
-  const [agents, setAgents] = useState<Agent[]>(initialAgents);
+  const [agents, setAgents] = useState<Agent[]>(agentsWithUser);
   const [candles, setCandles] = useState<CandleData[]>(initialCandles);
   const [isGameRunning, setIsGameRunning] = useState<boolean>(false);
   const [isRoundComplete, setIsRoundComplete] = useState<boolean>(false);
@@ -84,7 +91,7 @@ const ArenaPage = () => {
   const resetGame = () => {
     setCurrentRound(1);
     setSelectedRound(1);
-    setAgents(initialAgents);
+    setAgents(agentsWithUser); // Use agents with user marker
     setCandles(initialCandles);
     setIsGameRunning(false);
     setIsRoundComplete(false);
@@ -254,7 +261,7 @@ const ArenaPage = () => {
                 )}
                 
                 {/* Championship Progress moved here */}
-                <div className="hidden md:flex items-center gap-4 ml-6 pl-6 border-l border-white/10">
+                <div className="flex items-center gap-4 ml-6 pl-6 border-l border-white/10">
                   <div className="flex flex-col items-start">
                     <div className="text-sm text-arena-textMuted mb-1">Championship Progress</div>
                     <div className="flex items-center gap-1">
@@ -307,7 +314,7 @@ const ArenaPage = () => {
             </Web3CardContent>
           </Web3Card>
         
-          {/* Trade History Section - Moved below leaderboard */}
+          {/* Trade History Section - Below leaderboard as requested */}
           <Web3Card variant="glass" className="backdrop-blur-md">
             <Web3CardHeader className="border-b border-white/5">
               <div className="w-1 h-6 bg-gradient-to-b from-arena-accent/70 to-arena-accent2/70 rounded-full mr-3"></div>
