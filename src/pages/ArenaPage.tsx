@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import NavBar from '@/components/NavBar';
-import AgentCard from '@/components/AgentCard';
 import PriceChart from '@/components/PriceChart';
 import Leaderboard from '@/components/Leaderboard';
 import TradeHistoryTable from '@/components/TradeHistoryTable';
@@ -126,7 +125,7 @@ const ArenaPage = () => {
           agentId: agent.id,
           agentName: agent.name,
           action: 'close' as 'close',
-          amount: agent.positionSize,
+          amount: agent.positionSize || 0,
           timestamp: Date.now(),
           price: currentCandle.close,
           round: currentRound
@@ -171,9 +170,9 @@ const ArenaPage = () => {
       <NavBar />
       
       <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {/* Control Panel - Simplified */}
         <div className="flex flex-col gap-5">
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
+          {/* Control Buttons - Simplified */}
+          <div className="flex items-center justify-between mb-2">
             <div className="flex space-x-3">
               <Button 
                 variant="gradient" 
@@ -181,8 +180,8 @@ const ArenaPage = () => {
                 onClick={startRound}
                 disabled={!canStartNewRound}
               >
-                <Play className="mr-2 h-5 w-5" />
-                {currentRound === 1 ? 'Start Game' : 'Next Round'}
+                <Play className="h-5 w-5" />
+                Start
               </Button>
               
               <Button 
@@ -190,7 +189,7 @@ const ArenaPage = () => {
                 size="lg"
                 onClick={resetGame}
               >
-                <RotateCcw className="mr-2 h-5 w-5" />
+                <RotateCcw className="h-5 w-5" />
                 Reset
               </Button>
               
@@ -199,7 +198,7 @@ const ArenaPage = () => {
                 size="lg"
                 onClick={() => setIsRulesModalOpen(true)}
               >
-                <BookOpen className="mr-2 h-5 w-5" />
+                <BookOpen className="h-5 w-5" />
                 Game Rules
               </Button>
             </div>
@@ -221,31 +220,6 @@ const ArenaPage = () => {
               currentRound={currentRound}
             />
           </Web3Card>
-          
-          {/* Agent Positions Section - Single row layout */}
-          <div className="mb-5">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/80">Agent Positions</h2>
-              <div className="px-3 py-1 rounded-full bg-white/5 text-sm text-arena-textMuted">
-                Live Trading
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-4 gap-4 h-[160px]">
-              {agents.map((agent, index) => (
-                <AgentCard 
-                  key={agent.id}
-                  name={agent.name}
-                  balance={agent.balance}
-                  position={agent.position}
-                  positionSize={agent.positionSize}
-                  avatar={agent.avatar}
-                  index={index}
-                  pnlPercent={agent.pnlPercent}
-                />
-              ))}
-            </div>
-          </div>
           
           {/* Leaderboard Section */}
           <Web3Card variant="gradient" className="mb-5">

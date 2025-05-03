@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { CountUp } from 'countup.js';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 
 interface Agent {
   id: string;
@@ -11,6 +12,7 @@ interface Agent {
   position?: 'long' | 'short' | null;
   positionSize?: number;
   pnlPercent: number;
+  entryPrice?: number;
 }
 
 interface LeaderboardProps {
@@ -105,6 +107,29 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
     return 'bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700';
   };
 
+  const getPositionTag = (position: 'long' | 'short' | null | undefined, size?: number, entryPrice?: number) => {
+    if (!position) return null;
+    
+    return (
+      <div className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${
+        position === 'long' ? 'bg-arena-green/20 text-arena-green' : 'bg-arena-red/20 text-arena-red'
+      }`}>
+        {position === 'long' ? (
+          <ArrowUp className="w-3 h-3" />
+        ) : (
+          <ArrowDown className="w-3 h-3" />
+        )}
+        <span className="tracking-tight">{position.toUpperCase()}</span>
+        {size && (
+          <span className="ml-1 text-white/70">${size.toLocaleString()}</span>
+        )}
+        {entryPrice && (
+          <span className="ml-1 text-white/70">@ ${entryPrice.toLocaleString()}</span>
+        )}
+      </div>
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="p-4 space-y-3">
@@ -119,7 +144,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
 
   return (
     <div className="p-4 space-y-3" key={key}>
-      <div className="flex flex-col space-y-4">
+      <div className="flex flex-col space-y-3">
         {sortedAgents.map((agent, index) => {
           const isProfitable = agent.pnlPercent >= 0;
           const barWidth = `${Math.max(5, (agent.balance / maxBalance) * 100)}%`; // Min 5% width for visibility
@@ -130,7 +155,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
               className="flex items-center h-12 group"
             >
               {/* Position rank with badge effect */}
-              <div className={`w-10 flex justify-center items-center ${index < 3 ? 'scale-110' : ''}`}>
+              <div className={`w-8 flex justify-center items-center ${index < 3 ? 'scale-110' : ''}`}>
                 <span className={`font-mono font-bold text-lg relative ${
                   index === 0 ? 'text-yellow-400' :
                   index === 1 ? 'text-gray-300' :
@@ -142,8 +167,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
               </div>
               
               {/* Agent name with avatar */}
-              <div className="w-1/4 flex items-center gap-2">
-                <div className={`h-8 w-8 flex items-center justify-center text-base rounded-full border ${
+              <div className="w-[120px] flex items-center gap-2">
+                <div className={`h-7 w-7 flex items-center justify-center text-base rounded-full border ${
                   index === 0 ? 'border-yellow-400 bg-yellow-400/10' :
                   index === 1 ? 'border-gray-300 bg-gray-300/10' :
                   index === 2 ? 'border-amber-600 bg-amber-600/10' :
@@ -151,9 +176,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                 }`}>
                   {agent.avatar}
                 </div>
-                <span className="font-bold tracking-tight group-hover:text-arena-accent transition-colors">
+                <span className="font-bold tracking-tight truncate group-hover:text-arena-accent transition-colors">
                   {agent.name}
                 </span>
+              </div>
+              
+              {/* Position tag */}
+              <div className="w-[200px] flex items-center">
+                {getPositionTag(agent.position, agent.positionSize, agent.entryPrice)}
               </div>
               
               {/* Progress bar */}
