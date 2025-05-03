@@ -52,9 +52,9 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
     return 'bg-white/10 text-white px-2 py-0.5 rounded-full text-xs font-medium';
   };
   
-  // Get agent's trade for a specific round
-  const getAgentTradeForRound = (agentId: string, roundLogs: TradeLog[]) => {
-    return roundLogs.find(log => log.agentId === agentId);
+  // Get trades for a specific agent and round
+  const getAgentTradesForRound = (agentId: string, roundLogs: TradeLog[]) => {
+    return roundLogs.filter(log => log.agentId === agentId);
   };
 
   return (
@@ -79,27 +79,49 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
                   </div>
                 </TableCell>
                 {agents.map(agent => {
-                  const trade = getAgentTradeForRound(agent.id, roundLogs);
+                  const trades = getAgentTradesForRound(agent.id, roundLogs);
+                  const openTrade = trades.find(t => t.action === 'long' || t.action === 'short');
+                  const closeTrade = trades.find(t => t.action === 'close');
                   
                   return (
                     <TableCell key={agent.id} className="py-3">
-                      {trade ? (
+                      {trades.length > 0 ? (
                         <div className="flex flex-col gap-2">
-                          <div className="flex items-center">
-                            <span className={getActionClassName(trade.action)}>
-                              {trade.action.toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="flex flex-col gap-1 mt-1">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-arena-textMuted">Amount:</span>
-                              <span className="font-medium tabular-nums">{formatCurrency(trade.amount)}</span>
+                          {openTrade && (
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center">
+                                <span className={getActionClassName(openTrade.action)}>
+                                  {openTrade.action.toUpperCase()}
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-xs mt-1">
+                                <span className="text-arena-textMuted">Amount:</span>
+                                <span className="font-medium tabular-nums">{formatCurrency(openTrade.amount)}</span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-arena-textMuted">Price:</span>
+                                <span className="font-mono font-medium">${openTrade.price.toFixed(2)}</span>
+                              </div>
                             </div>
-                            <div className="flex justify-between text-xs">
-                              <span className="text-arena-textMuted">Price:</span>
-                              <span className="font-mono font-medium">${trade.price.toFixed(2)}</span>
+                          )}
+                          
+                          {closeTrade && (
+                            <div className="flex flex-col gap-1 pt-2 mt-2 border-t border-white/5">
+                              <div className="flex items-center">
+                                <span className="bg-white/10 text-white px-2 py-0.5 rounded-full text-xs font-medium">
+                                  CLOSED
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-xs mt-1">
+                                <span className="text-arena-textMuted">Amount:</span>
+                                <span className="font-medium tabular-nums">{formatCurrency(closeTrade.amount)}</span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-arena-textMuted">Price:</span>
+                                <span className="font-mono font-medium">${closeTrade.price.toFixed(2)}</span>
+                              </div>
                             </div>
-                          </div>
+                          )}
                         </div>
                       ) : (
                         <div className="text-arena-textMuted text-xs text-center italic">No trade</div>

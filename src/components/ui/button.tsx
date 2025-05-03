@@ -19,8 +19,8 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-white/10 hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        gradient: "bg-gradient-to-r from-arena-accent to-arena-accent2 text-white shadow-lg shadow-arena-accent/20 hover:shadow-xl hover:shadow-arena-accent/30 transition-shadow",
-        web3: "bg-white/10 backdrop-filter backdrop-blur-sm border border-white/10 text-white hover:bg-white/20 transition-all",
+        gradient: "bg-gradient-to-r from-arena-accent via-arena-accent to-arena-accent2 text-white shadow-lg shadow-arena-accent/20 hover:shadow-xl hover:shadow-arena-accent/30 transition-shadow border border-white/10",
+        web3: "bg-white/10 backdrop-filter backdrop-blur-sm border border-white/10 text-white hover:bg-white/20 transition-all hover:border-white/20 shadow-lg",
       },
       size: {
         default: "h-10 px-5 py-2",

@@ -15,13 +15,13 @@ const Web3Card = React.forwardRef<HTMLDivElement, Web3CardProps>(
       <div
         ref={ref}
         className={cn(
-          "rounded-xl border border-white/10 overflow-hidden backdrop-blur-sm shadow-xl transition-all duration-300 hover:shadow-2xl",
+          "rounded-xl border overflow-hidden backdrop-blur-sm shadow-xl transition-all duration-300",
           {
-            "bg-arena-card/70": variant === "default",
-            "bg-gradient-to-br from-arena-card/90 to-arena-bg/90": variant === "gradient",
-            "bg-white/5 backdrop-blur-lg": variant === "glass",
-            "bg-gradient-to-br from-arena-accent/10 to-arena-accent2/10": variant === "accent",
-            "border-arena-accent/30": isActive,
+            "bg-arena-card/70 border-white/10": variant === "default",
+            "bg-gradient-to-br from-arena-card/90 via-arena-card/70 to-arena-bg/90 border-white/10": variant === "gradient",
+            "bg-white/5 backdrop-blur-lg border-white/5": variant === "glass",
+            "bg-gradient-to-br from-arena-accent/10 to-arena-accent2/10 border-arena-accent/20": variant === "accent",
+            "ring-2 ring-arena-accent/30": isActive,
           },
           className
         )}
@@ -63,7 +63,11 @@ const Web3CardIcon = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("h-10 w-10 rounded-lg bg-gradient-to-br from-arena-accent/20 to-arena-accent2/20 flex items-center justify-center", className)}
+    className={cn(
+      "h-10 w-10 rounded-lg flex items-center justify-center",
+      "bg-gradient-to-br from-arena-accent/20 via-arena-accent/10 to-arena-accent2/20",
+      className
+    )}
     {...props}
   />
 ))
@@ -75,7 +79,11 @@ const Web3CardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn("text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/80", className)}
+    className={cn(
+      "text-xl font-bold",
+      "bg-clip-text text-transparent bg-gradient-to-r from-white via-white/95 to-white/80", 
+      className
+    )}
     {...props}
   />
 ))

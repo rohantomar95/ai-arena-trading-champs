@@ -1,10 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import NavBar from '@/components/NavBar';
 import AgentCard from '@/components/AgentCard';
 import PriceChart from '@/components/PriceChart';
 import Leaderboard from '@/components/Leaderboard';
 import TradeHistoryTable from '@/components/TradeHistoryTable';
+import GameRulesModal from '@/components/GameRulesModal';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { 
@@ -20,7 +21,6 @@ import {
   TradeLog
 } from '@/lib/gameData';
 import { Play, RotateCcw, BookOpen } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Web3Card, Web3CardHeader, Web3CardTitle, Web3CardContent } from '@/components/ui/web3-card';
 
 const ArenaPage = () => {
@@ -170,15 +170,14 @@ const ArenaPage = () => {
     <div className="min-h-screen bg-gradient-to-b from-arena-bg to-black overflow-x-hidden">
       <NavBar />
       
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Control Panel */}
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-wrap items-center justify-between mb-6 gap-4">
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        {/* Control Panel - Simplified */}
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
             <div className="flex space-x-3">
               <Button 
-                variant="default" 
+                variant="gradient" 
                 size="lg"
-                className={`bg-gradient-to-r from-arena-accent to-arena-accent2 text-white border-none hover:opacity-90 transition-opacity ${!canStartNewRound ? 'opacity-50 cursor-not-allowed' : ''}`}
                 onClick={startRound}
                 disabled={!canStartNewRound}
               >
@@ -187,9 +186,8 @@ const ArenaPage = () => {
               </Button>
               
               <Button 
-                variant="outline" 
+                variant="web3" 
                 size="lg"
-                className="bg-white/5 border border-white/10 hover:bg-white/10 text-white"
                 onClick={resetGame}
               >
                 <RotateCcw className="mr-2 h-5 w-5" />
@@ -197,9 +195,8 @@ const ArenaPage = () => {
               </Button>
               
               <Button 
-                variant="outline" 
+                variant="web3" 
                 size="lg"
-                className="bg-white/5 border border-white/10 hover:bg-white/10 text-white"
                 onClick={() => setIsRulesModalOpen(true)}
               >
                 <BookOpen className="mr-2 h-5 w-5" />
@@ -216,7 +213,7 @@ const ArenaPage = () => {
           </div>
           
           {/* Chart Section */}
-          <Web3Card variant="default" className="mb-6 overflow-hidden">
+          <Web3Card className="overflow-hidden">
             <PriceChart 
               candles={candles}
               onCandleReveal={handleCandleReveal}
@@ -225,16 +222,16 @@ const ArenaPage = () => {
             />
           </Web3Card>
           
-          {/* Agent Positions Section */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
+          {/* Agent Positions Section - Single row layout */}
+          <div className="mb-5">
+            <div className="flex items-center justify-between mb-3">
               <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/80">Agent Positions</h2>
               <div className="px-3 py-1 rounded-full bg-white/5 text-sm text-arena-textMuted">
                 Live Trading
               </div>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-4 gap-4 h-[160px]">
               {agents.map((agent, index) => (
                 <AgentCard 
                   key={agent.id}
@@ -251,7 +248,7 @@ const ArenaPage = () => {
           </div>
           
           {/* Leaderboard Section */}
-          <Web3Card variant="gradient" className="mb-6">
+          <Web3Card variant="gradient" className="mb-5">
             <Web3CardHeader>
               <Web3CardTitle>Live Leaderboard</Web3CardTitle>
               <div className="ml-auto px-3 py-1 rounded-full bg-arena-card/50 text-xs text-arena-textMuted">
@@ -264,7 +261,7 @@ const ArenaPage = () => {
           </Web3Card>
           
           {/* Trade History Section */}
-          <Web3Card variant="default" className="mb-6">
+          <Web3Card className="mb-5">
             <Web3CardHeader>
               <Web3CardTitle>Trade History</Web3CardTitle>
             </Web3CardHeader>
@@ -274,6 +271,9 @@ const ArenaPage = () => {
           </Web3Card>
         </div>
       </div>
+      
+      {/* Game Rules Modal */}
+      <GameRulesModal open={isRulesModalOpen} onClose={() => setIsRulesModalOpen(false)} />
     </div>
   );
 };
