@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { 
   LineChart, 
@@ -28,11 +29,6 @@ interface PriceChartProps {
   onCandleReveal?: (index: number) => void;
   isRevealing?: boolean;
   currentRound: number;
-}
-
-interface RoundHistoryEntry {
-  round: number;
-  candles: CandleData[];
 }
 
 // Custom candle component
@@ -75,28 +71,8 @@ const PriceChart: React.FC<PriceChartProps> = ({
   currentRound
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
-  const [showHistory, setShowHistory] = useState<boolean>(false);
   const [chartType, setChartType] = useState<'line' | 'candle'>('candle');
-  const [roundHistory, setRoundHistory] = useState<RoundHistoryEntry[]>([]);
   
-  // When round changes and candles are revealed, store them in history
-  useEffect(() => {
-    const revealedCount = candles.filter(c => c.revealed).length;
-    if (revealedCount > 0 && revealedCount === candles.length) {
-      // Round is complete, store in history
-      setRoundHistory(prev => {
-        // Check if this round is already in history
-        const roundExists = prev.some(item => item.round === currentRound);
-        if (roundExists) return prev;
-        
-        return [...prev, {
-          round: currentRound,
-          candles: [...candles]
-        }];
-      });
-    }
-  }, [candles, currentRound]);
-
   useEffect(() => {
     if (isRevealing && onCandleReveal) {
       const revealedCount = candles.filter(c => c.revealed).length;
@@ -147,25 +123,6 @@ const PriceChart: React.FC<PriceChartProps> = ({
     
     return chartData.map((_, i) => intercept + slope * i);
   }, [chartData]);
-
-  // Get history chart data for a specific round
-  const getHistoryChartData = (round: number) => {
-    const roundData = roundHistory.find(item => item.round === round);
-    if (!roundData) return [];
-    
-    return roundData.candles
-      .filter(candle => candle.revealed)
-      .map((candle, index) => ({
-        name: `#${index + 1}`,
-        open: candle.open,
-        high: candle.high,
-        low: candle.low,
-        close: candle.close,
-        price: candle.close,
-        volume: candle.volume,
-        color: candle.close > candle.open ? "#11E7DA" : "#ea384c",
-      }));
-  };
 
   // Calculate min and max values for scaling
   const revealedCandles = candles.filter(candle => candle.revealed);
@@ -221,14 +178,14 @@ const PriceChart: React.FC<PriceChartProps> = ({
   };
 
   return (
-    <div className="relative h-[400px] w-full glass-card p-4 backdrop-blur-md animate-fade-in">
+    <div className="relative h-[400px] w-full glass-card backdrop-blur-md animate-fade-in">
       <div className="absolute top-3 left-4 z-10">
         <div className="flex items-center gap-2">
           <div className="text-xl font-bold text-white">
             <span className="neon-text">ETH/USD</span>
           </div>
           <div className="px-2 py-0.5 bg-arena-accent/20 text-arena-accent text-xs font-medium rounded-full">
-            Round {currentRound}/5
+            {isRevealing ? "Live" : `Round ${currentRound}`}
           </div>
         </div>
         <div className="text-sm text-arena-textMuted mt-1">
@@ -263,20 +220,6 @@ const PriceChart: React.FC<PriceChartProps> = ({
             Candle
           </button>
         </div>
-        
-        {roundHistory.length > 0 && (
-          <button
-            onClick={() => setShowHistory(!showHistory)}
-            className={`px-2 py-1 text-xs font-medium rounded-lg flex items-center
-              ${showHistory 
-                ? 'bg-arena-accent/50 text-white' 
-                : 'bg-arena-accent/20 text-arena-accent hover:bg-arena-accent/30'} 
-              transition-colors`}
-          >
-            <History className="h-3 w-3 mr-1" />
-            {showHistory ? 'Hide History' : 'Show History'}
-          </button>
-        )}
       </div>
       
       <div className="pt-16 h-full">
@@ -341,24 +284,6 @@ const PriceChart: React.FC<PriceChartProps> = ({
                     activeDot={false}
                   />
                 )}
-                
-                {/* Show history lines if enabled */}
-                {showHistory && roundHistory
-                  .filter(item => item.round !== currentRound) // Don't show current round in history
-                  .map(item => (
-                    <Line
-                      key={`history-${item.round}`}
-                      type="monotone"
-                      data={getHistoryChartData(item.round)}
-                      dataKey="price"
-                      stroke={`rgba(255, 255, 255, ${0.15 + (item.round * 0.15)})`} // Increasing opacity for newer rounds
-                      strokeWidth={1}
-                      dot={false}
-                      activeDot={false}
-                      name={`Round ${item.round}`}
-                    />
-                  ))
-                }
               </ComposedChart>
             ) : (
               <ComposedChart 
@@ -396,15 +321,14 @@ const PriceChart: React.FC<PriceChartProps> = ({
                   barSize={20} 
                   fill="rgba(255,255,255,0.1)" 
                   yAxisId="volume" 
-                  shape={<CustomCandle />}
                 />
                 
                 {/* Candlesticks using custom shape */}
                 <Bar 
                   dataKey={d => Math.abs(d.high - d.low)} 
                   fill="transparent"
-                  stroke="rgba(255,255,255,0.1)" // Fixed: Use a static string instead of a function
-                  yAxisId="volume"  // Add the same yAxisId to match the first Bar component
+                  stroke="rgba(255,255,255,0.1)"
+                  yAxisId="volume"
                   shape={<CustomCandle />}
                 />
                 
@@ -434,24 +358,6 @@ const PriceChart: React.FC<PriceChartProps> = ({
                     activeDot={false}
                   />
                 )}
-                
-                {/* Show history data if enabled */}
-                {showHistory && roundHistory
-                  .filter(item => item.round !== currentRound)
-                  .map(item => (
-                    <Line
-                      key={`history-${item.round}`}
-                      type="monotone"
-                      data={getHistoryChartData(item.round)}
-                      dataKey="price"
-                      stroke={`rgba(255, 255, 255, ${0.15 + (item.round * 0.15)})`}
-                      strokeWidth={1}
-                      dot={false}
-                      activeDot={false}
-                      name={`Round ${item.round}`}
-                    />
-                  ))
-                }
               </ComposedChart>
             )}
           </ResponsiveContainer>

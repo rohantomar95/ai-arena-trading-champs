@@ -5,6 +5,7 @@ import PriceChart from '@/components/PriceChart';
 import Leaderboard from '@/components/Leaderboard';
 import TradeHistoryTable from '@/components/TradeHistoryTable';
 import GameRulesModal from '@/components/GameRulesModal';
+import RoundSelector from '@/components/RoundSelector';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { 
@@ -24,6 +25,7 @@ import { Web3Card, Web3CardHeader, Web3CardTitle, Web3CardContent } from '@/comp
 
 const ArenaPage = () => {
   const [currentRound, setCurrentRound] = useState<number>(1);
+  const [selectedRound, setSelectedRound] = useState<number>(1);
   const [agents, setAgents] = useState<Agent[]>(initialAgents);
   const [candles, setCandles] = useState<CandleData[]>(initialCandles);
   const [isGameRunning, setIsGameRunning] = useState<boolean>(false);
@@ -31,12 +33,24 @@ const ArenaPage = () => {
   const [tradeLogs, setTradeLogs] = useState<TradeLog[]>([]);
   const [isLeaderboardAnimating, setIsLeaderboardAnimating] = useState<boolean>(false);
   const [isRulesModalOpen, setIsRulesModalOpen] = useState<boolean>(false);
+  const [roundHistoryCandles, setRoundHistoryCandles] = useState<Record<number, CandleData[]>>({
+    1: initialCandles
+  });
   
   // Function to start a new round
   const startRound = () => {
     // Generate new candles for this round
     const newCandles = generateCandlesForRound(currentRound);
     setCandles(newCandles);
+    
+    // Store these candles in history for this round
+    setRoundHistoryCandles(prev => ({
+      ...prev,
+      [currentRound]: newCandles
+    }));
+    
+    // Update the selected round to the current round
+    setSelectedRound(currentRound);
     
     // Small delay before generating trades for dramatic effect
     setTimeout(() => {
@@ -68,11 +82,15 @@ const ArenaPage = () => {
   // Function to reset the game
   const resetGame = () => {
     setCurrentRound(1);
+    setSelectedRound(1);
     setAgents(initialAgents);
     setCandles(initialCandles);
     setIsGameRunning(false);
     setIsRoundComplete(false);
     setTradeLogs([]);
+    setRoundHistoryCandles({
+      1: initialCandles
+    });
     
     toast({
       title: "Game Reset",
@@ -92,6 +110,12 @@ const ArenaPage = () => {
     const updatedCandles = [...candles];
     updatedCandles[revealedCount].revealed = true;
     setCandles(updatedCandles);
+    
+    // Update in the history as well
+    setRoundHistoryCandles(prev => ({
+      ...prev,
+      [currentRound]: updatedCandles
+    }));
     
     // Calculate new P&L based on the newly revealed candle
     const previousCandle = revealedCount > 0 ? updatedCandles[revealedCount - 1] : null;
@@ -161,6 +185,14 @@ const ArenaPage = () => {
     revealNextCandle();
   };
 
+  // Handle round selection change
+  const handleRoundSelect = (round: number) => {
+    setSelectedRound(round);
+  };
+
+  // Get the candles for the selected round
+  const selectedCandles = roundHistoryCandles[selectedRound] || candles;
+  
   // Game state helper functions
   const isGameOver = isRoundComplete && currentRound === 5;
   const canStartNewRound = !isGameRunning && (currentRound === 1 || isRoundComplete) && !isGameOver;
@@ -213,11 +245,27 @@ const ArenaPage = () => {
           
           {/* Chart Section */}
           <Web3Card className="overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <div className="flex items-center">
+                <h3 className="text-xl font-bold text-white">ETH/USD Chart</h3>
+                {selectedRound !== currentRound && (
+                  <span className="ml-3 px-2 py-0.5 text-sm bg-arena-accent/20 text-arena-accent rounded-md">
+                    Viewing Round {selectedRound}
+                  </span>
+                )}
+              </div>
+              <RoundSelector 
+                currentRound={currentRound}
+                totalRounds={5}
+                selectedRound={selectedRound}
+                onSelectRound={handleRoundSelect}
+              />
+            </div>
             <PriceChart 
-              candles={candles}
+              candles={selectedCandles}
               onCandleReveal={handleCandleReveal}
-              isRevealing={isGameRunning}
-              currentRound={currentRound}
+              isRevealing={isGameRunning && selectedRound === currentRound}
+              currentRound={selectedRound}
             />
           </Web3Card>
           
