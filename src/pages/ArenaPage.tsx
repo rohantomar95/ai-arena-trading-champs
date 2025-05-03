@@ -8,6 +8,7 @@ import GameRulesModal from '@/components/GameRulesModal';
 import RoundSelector from '@/components/RoundSelector';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import { Progress } from "@/components/ui/progress";
 import { 
   initialAgents, 
   initialCandles, 
@@ -198,30 +199,33 @@ const ArenaPage = () => {
   const canStartNewRound = !isGameRunning && (currentRound === 1 || isRoundComplete) && !isGameOver;
   
   return (
-    <div className="min-h-screen bg-gradient-to-b from-arena-bg to-black overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-arena-bg to-black/90 overflow-x-hidden">
       <NavBar />
       
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         <div className="flex flex-col gap-5">
-          {/* Control Buttons - Simplified */}
-          <div className="flex items-center justify-between mb-2">
+          {/* Control Bar with Round Indicator and Action Buttons */}
+          <Web3Card variant="glass" className="p-4 flex items-center justify-between">
             <div className="flex space-x-3">
               <Button 
                 variant="gradient" 
                 size="lg"
                 onClick={startRound}
                 disabled={!canStartNewRound}
+                className="relative overflow-hidden group"
               >
-                <Play className="h-5 w-5" />
-                Start
+                <div className="absolute inset-0 bg-gradient-to-r from-arena-accent/20 to-arena-accent2/20 group-hover:opacity-100 opacity-0 transition-opacity duration-300"></div>
+                <Play className="h-5 w-5 mr-2" />
+                Start Round {currentRound}
               </Button>
               
               <Button 
                 variant="web3" 
                 size="lg"
                 onClick={resetGame}
+                className="bg-white/5 hover:bg-white/10"
               >
-                <RotateCcw className="h-5 w-5" />
+                <RotateCcw className="h-5 w-5 mr-2" />
                 Reset
               </Button>
               
@@ -229,27 +233,46 @@ const ArenaPage = () => {
                 variant="web3" 
                 size="lg"
                 onClick={() => setIsRulesModalOpen(true)}
+                className="bg-white/5 hover:bg-white/10"
               >
-                <BookOpen className="h-5 w-5" />
-                Game Rules
+                <BookOpen className="h-5 w-5 mr-2" />
+                Rules
               </Button>
             </div>
             
-            <div className="flex items-center gap-3">
-              <span className="text-arena-textMuted">Round:</span>
-              <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-arena-accent to-arena-accent2">
-                {currentRound}<span className="text-white/50">/5</span>
-              </span>
+            <div className="flex items-center gap-4">
+              <div className="flex flex-col items-end">
+                <div className="text-sm text-arena-textMuted">Championship Progress</div>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div 
+                      key={i} 
+                      className={cn(
+                        "w-3 h-8 rounded-sm transition-all", 
+                        i < currentRound 
+                          ? "bg-gradient-to-t from-arena-accent to-arena-accent2 shadow-glow" 
+                          : "bg-white/10"
+                      )}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                <div className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-arena-accent to-arena-accent2">
+                  {currentRound}<span className="text-white/30">/5</span>
+                </div>
+              </div>
             </div>
-          </div>
+          </Web3Card>
           
           {/* Chart Section */}
-          <Web3Card className="overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-white/10">
+          <Web3Card className="overflow-hidden backdrop-blur-md border border-white/5">
+            <div className="flex items-center justify-between p-4 border-b border-white/5">
               <div className="flex items-center">
-                <h3 className="text-xl font-bold text-white">ETH/USD Chart</h3>
+                <div className="w-1.5 h-8 bg-gradient-to-b from-arena-accent to-arena-accent2 rounded-full mr-3"></div>
+                <h3 className="text-xl font-medium text-white/90">ETH/USD Price Chart</h3>
                 {selectedRound !== currentRound && (
-                  <span className="ml-3 px-2 py-0.5 text-sm bg-arena-accent/20 text-arena-accent rounded-md">
+                  <span className="ml-3 px-2.5 py-0.5 text-xs bg-arena-accent/10 text-arena-accent/90 rounded-full border border-arena-accent/20">
                     Viewing Round {selectedRound}
                   </span>
                 )}
@@ -270,27 +293,31 @@ const ArenaPage = () => {
           </Web3Card>
           
           {/* Leaderboard Section */}
-          <Web3Card variant="gradient" className="mb-5">
-            <Web3CardHeader>
-              <Web3CardTitle>Live Leaderboard</Web3CardTitle>
-              <div className="ml-auto px-3 py-1 rounded-full bg-arena-card/50 text-xs text-arena-textMuted">
-                Updated in Real-time
-              </div>
-            </Web3CardHeader>
-            <Web3CardContent className="p-0">
-              <Leaderboard agents={agents} isAnimating={isLeaderboardAnimating} />
-            </Web3CardContent>
-          </Web3Card>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <Web3Card variant="glass" className="md:col-span-2">
+              <Web3CardHeader className="border-b border-white/5">
+                <div className="w-1 h-6 bg-gradient-to-b from-arena-accent to-arena-accent2 rounded-full mr-3"></div>
+                <Web3CardTitle>Live Leaderboard</Web3CardTitle>
+                <div className="ml-auto px-3 py-1 rounded-full bg-arena-card/30 text-xs text-arena-textMuted backdrop-blur-md">
+                  Updated in Real-time
+                </div>
+              </Web3CardHeader>
+              <Web3CardContent className="p-0">
+                <Leaderboard agents={agents} isAnimating={isLeaderboardAnimating} />
+              </Web3CardContent>
+            </Web3Card>
           
-          {/* Trade History Section */}
-          <Web3Card className="mb-5">
-            <Web3CardHeader>
-              <Web3CardTitle>Trade History</Web3CardTitle>
-            </Web3CardHeader>
-            <Web3CardContent className="p-0">
-              <TradeHistoryTable agents={agents} logs={tradeLogs} />
-            </Web3CardContent>
-          </Web3Card>
+            {/* Trade History Section */}
+            <Web3Card variant="glass" className="md:col-span-1">
+              <Web3CardHeader className="border-b border-white/5">
+                <div className="w-1 h-6 bg-gradient-to-b from-arena-accent to-arena-accent2 rounded-full mr-3"></div>
+                <Web3CardTitle>Trade History</Web3CardTitle>
+              </Web3CardHeader>
+              <Web3CardContent className="p-0 max-h-[400px] overflow-auto">
+                <TradeHistoryTable agents={agents} logs={tradeLogs} />
+              </Web3CardContent>
+            </Web3Card>
+          </div>
         </div>
       </div>
       

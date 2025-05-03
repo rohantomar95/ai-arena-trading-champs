@@ -46,7 +46,7 @@ const ToggleGroupItem = React.forwardRef<
           variant: context.variant || variant,
           size: context.size || size,
         }),
-        "transition-all duration-200 hover:bg-white/20",
+        "transition-all duration-300 ease-in-out hover:bg-white/10",
         className
       )}
       {...props}
