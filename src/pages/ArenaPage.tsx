@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import NavBar from '@/components/NavBar';
 import PriceChart from '@/components/PriceChart';
@@ -203,11 +202,11 @@ const ArenaPage = () => {
     <div className="min-h-screen bg-gradient-to-b from-arena-bg to-black/90 overflow-x-hidden">
       <NavBar />
       
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        <div className="flex flex-col gap-5">
-          {/* Control Bar with Round Indicator and Action Buttons */}
-          <Web3Card variant="glass" className="p-4 flex items-center justify-between">
-            <div className="flex space-x-3">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="flex flex-col gap-8">
+          {/* Control Bar with Action Buttons */}
+          <div className="flex flex-wrap items-center justify-between gap-4 bg-white/5 backdrop-blur-md p-4 rounded-xl border border-white/10">
+            <div className="flex flex-wrap gap-3">
               <Button 
                 variant="gradient" 
                 size="lg"
@@ -240,43 +239,44 @@ const ArenaPage = () => {
                 Rules
               </Button>
             </div>
-            
-            <div className="flex items-center gap-4">
-              <div className="flex flex-col items-end">
-                <div className="text-sm text-arena-textMuted">Championship Progress</div>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div 
-                      key={i} 
-                      className={cn(
-                        "w-3 h-8 rounded-sm transition-all", 
-                        i < currentRound 
-                          ? "bg-gradient-to-t from-arena-accent to-arena-accent2 shadow-glow" 
-                          : "bg-white/10"
-                      )}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-                <div className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-arena-accent to-arena-accent2">
-                  {currentRound}<span className="text-white/30">/5</span>
-                </div>
-              </div>
-            </div>
-          </Web3Card>
+          </div>
           
           {/* Chart Section */}
           <Web3Card className="overflow-hidden backdrop-blur-md border border-white/5">
-            <div className="flex items-center justify-between p-4 border-b border-white/5">
+            <div className="flex flex-wrap items-center justify-between p-5 border-b border-white/5">
               <div className="flex items-center">
-                <div className="w-1.5 h-8 bg-gradient-to-b from-arena-accent to-arena-accent2 rounded-full mr-3"></div>
+                <div className="w-1.5 h-8 bg-gradient-to-b from-arena-accent/70 to-arena-accent2/70 rounded-full mr-3"></div>
                 <h3 className="text-xl font-medium text-white/90">ETH/USD Price Chart</h3>
                 {selectedRound !== currentRound && (
                   <span className="ml-3 px-2.5 py-0.5 text-xs bg-arena-accent/10 text-arena-accent/90 rounded-full border border-arena-accent/20">
                     Viewing Round {selectedRound}
                   </span>
                 )}
+                
+                {/* Championship Progress moved here */}
+                <div className="hidden md:flex items-center gap-4 ml-6 pl-6 border-l border-white/10">
+                  <div className="flex flex-col items-start">
+                    <div className="text-sm text-arena-textMuted mb-1">Championship Progress</div>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <div 
+                          key={i} 
+                          className={cn(
+                            "w-2.5 h-7 rounded-sm transition-all", 
+                            i < currentRound 
+                              ? "bg-gradient-to-t from-arena-accent/70 to-arena-accent2/70" 
+                              : "bg-white/10"
+                          )}
+                        />
+                      ))}
+                      <div className="h-7 w-7 rounded-full bg-white/5 flex items-center justify-center ml-2 border border-white/10">
+                        <div className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-arena-accent to-arena-accent2">
+                          {currentRound}<span className="text-white/30">/5</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
               <RoundSelector 
                 currentRound={currentRound}
@@ -294,31 +294,29 @@ const ArenaPage = () => {
           </Web3Card>
           
           {/* Leaderboard Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <Web3Card variant="glass" className="md:col-span-2">
-              <Web3CardHeader className="border-b border-white/5">
-                <div className="w-1 h-6 bg-gradient-to-b from-arena-accent to-arena-accent2 rounded-full mr-3"></div>
-                <Web3CardTitle>Live Leaderboard</Web3CardTitle>
-                <div className="ml-auto px-3 py-1 rounded-full bg-arena-card/30 text-xs text-arena-textMuted backdrop-blur-md">
-                  Updated in Real-time
-                </div>
-              </Web3CardHeader>
-              <Web3CardContent className="p-0">
-                <Leaderboard agents={agents} isAnimating={isLeaderboardAnimating} />
-              </Web3CardContent>
-            </Web3Card>
-          
-            {/* Trade History Section */}
-            <Web3Card variant="glass" className="md:col-span-1">
-              <Web3CardHeader className="border-b border-white/5">
-                <div className="w-1 h-6 bg-gradient-to-b from-arena-accent to-arena-accent2 rounded-full mr-3"></div>
-                <Web3CardTitle>Trade History</Web3CardTitle>
-              </Web3CardHeader>
-              <Web3CardContent className="p-0 max-h-[400px] overflow-auto">
-                <TradeHistoryTable agents={agents} logs={tradeLogs} />
-              </Web3CardContent>
-            </Web3Card>
-          </div>
+          <Web3Card variant="glass" className="backdrop-blur-md">
+            <Web3CardHeader className="border-b border-white/5">
+              <div className="w-1 h-6 bg-gradient-to-b from-arena-accent/70 to-arena-accent2/70 rounded-full mr-3"></div>
+              <Web3CardTitle>Live Leaderboard</Web3CardTitle>
+              <div className="ml-auto px-3 py-1 rounded-full bg-arena-card/30 text-xs text-arena-textMuted backdrop-blur-md">
+                Updated in Real-time
+              </div>
+            </Web3CardHeader>
+            <Web3CardContent className="p-0">
+              <Leaderboard agents={agents} isAnimating={isLeaderboardAnimating} />
+            </Web3CardContent>
+          </Web3Card>
+        
+          {/* Trade History Section - Moved below leaderboard */}
+          <Web3Card variant="glass" className="backdrop-blur-md">
+            <Web3CardHeader className="border-b border-white/5">
+              <div className="w-1 h-6 bg-gradient-to-b from-arena-accent/70 to-arena-accent2/70 rounded-full mr-3"></div>
+              <Web3CardTitle>Trade History</Web3CardTitle>
+            </Web3CardHeader>
+            <Web3CardContent className="p-0 max-h-[400px] overflow-auto">
+              <TradeHistoryTable agents={agents} logs={tradeLogs} />
+            </Web3CardContent>
+          </Web3Card>
         </div>
       </div>
       
