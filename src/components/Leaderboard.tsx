@@ -234,10 +234,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                   {getPositionTag(agent.position, agent.positionSize, agent.entryPrice)}
                 </div>
                 
-                {/* Progress bar - use shadcn Progress component */}
+                {/* Progress bar - use shadcn Progress component - INCREASED HEIGHT */}
                 <div className="relative flex-1 h-16 flex items-center">
                   <Progress 
-                    className="h-6 bg-white/5" 
+                    className="h-10 bg-white/5" 
                     value={(agent.balance / maxBalance) * 100}
                     // Use agent's color for the progress indicator
                     indicatorClassName={`bg-gradient-to-r ${agentGradient}`}
