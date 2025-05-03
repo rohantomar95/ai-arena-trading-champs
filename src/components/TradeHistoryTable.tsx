@@ -47,9 +47,9 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
   
   // Get the appropriate style class for each action type
   const getActionClassName = (action: string) => {
-    if (action === 'long') return 'bg-arena-green/20 text-arena-green px-2 py-0.5 rounded text-xs font-medium';
-    if (action === 'short') return 'bg-arena-red/20 text-arena-red px-2 py-0.5 rounded text-xs font-medium';
-    return 'bg-white/10 text-white px-2 py-0.5 rounded text-xs font-medium';
+    if (action === 'long') return 'bg-arena-green/20 text-arena-green px-2 py-0.5 rounded-full text-xs font-medium';
+    if (action === 'short') return 'bg-arena-red/20 text-arena-red px-2 py-0.5 rounded-full text-xs font-medium';
+    return 'bg-white/10 text-white px-2 py-0.5 rounded-full text-xs font-medium';
   };
   
   // Get agent's trade for a specific round
@@ -61,40 +61,48 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
     <div className="overflow-x-auto">
       <Table>
         <TableHeader>
-          <TableRow className="border-white/10">
-            <TableHead className="text-white">Round</TableHead>
+          <TableRow className="border-white/10 bg-arena-card/50">
+            <TableHead className="text-white font-bold text-center">Round</TableHead>
             {agents.map(agent => (
-              <TableHead key={agent.id} className="text-white">{agent.name}</TableHead>
+              <TableHead key={agent.id} className="text-white font-bold">{agent.name}</TableHead>
             ))}
           </TableRow>
         </TableHeader>
         <TableBody>
           {Object.entries(logsByRound)
-            .sort((a, b) => Number(a[0]) - Number(b[0])) // Sort rounds in ascending order
+            .sort(([a], [b]) => Number(a) - Number(b)) // Sort rounds in ascending order
             .map(([round, roundLogs]) => (
-              <TableRow key={round} className="border-white/5 hover:bg-arena-bg/50">
-                <TableCell className="font-medium text-white">Round {round}</TableCell>
+              <TableRow key={round} className="border-white/5 hover:bg-white/5">
+                <TableCell className="font-bold text-center bg-gradient-to-r from-arena-accent/10 to-arena-accent2/10">
+                  <div className="bg-clip-text text-transparent bg-gradient-to-r from-arena-accent to-arena-accent2">
+                    Round {round}
+                  </div>
+                </TableCell>
                 {agents.map(agent => {
                   const trade = getAgentTradeForRound(agent.id, roundLogs);
                   
                   return (
-                    <TableCell key={agent.id}>
+                    <TableCell key={agent.id} className="py-3">
                       {trade ? (
-                        <div className="flex flex-col gap-1">
-                          <span className={getActionClassName(trade.action)}>
-                            {trade.action.toUpperCase()}
-                          </span>
-                          <div className="flex justify-between text-xs">
-                            <span className="text-arena-textMuted">Amount:</span>
-                            <span className="font-medium tabular-nums">{formatCurrency(trade.amount)}</span>
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center">
+                            <span className={getActionClassName(trade.action)}>
+                              {trade.action.toUpperCase()}
+                            </span>
                           </div>
-                          <div className="flex justify-between text-xs">
-                            <span className="text-arena-textMuted">Price:</span>
-                            <span className="font-mono">${trade.price.toFixed(2)}</span>
+                          <div className="flex flex-col gap-1 mt-1">
+                            <div className="flex justify-between text-xs">
+                              <span className="text-arena-textMuted">Amount:</span>
+                              <span className="font-medium tabular-nums">{formatCurrency(trade.amount)}</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-arena-textMuted">Price:</span>
+                              <span className="font-mono font-medium">${trade.price.toFixed(2)}</span>
+                            </div>
                           </div>
                         </div>
                       ) : (
-                        <span className="text-arena-textMuted text-xs">No trade</span>
+                        <div className="text-arena-textMuted text-xs text-center italic">No trade</div>
                       )}
                     </TableCell>
                   );
