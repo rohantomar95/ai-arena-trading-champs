@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { 
   Table, 
@@ -10,6 +9,7 @@ import {
 } from '@/components/ui/table';
 import { TradeLog } from '@/lib/gameData';
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 // Updated Agent interface to include isUser property
 interface Agent {
@@ -35,15 +35,28 @@ const agentHeaderGradients = [
   'from-[#FFD700] to-[#FFA500]', // 1st place (gold)
   'from-[#C0C0C0] to-[#A9A9A9]', // 2nd place (silver)
   'from-[#CD7F32] to-[#A0522D]', // 3rd place (bronze)
-  'from-[#4158D0] to-[#C850C0]', // purple to pink
-  'from-[#0093E9] to-[#80D0C7]', // blue to teal
-  'from-[#8EC5FC] to-[#E0C3FC]', // light blue to light purple
-  'from-[#43E97B] to-[#38F9D7]', // green to teal
-  'from-[#FA8BFF] to-[#2BD2FF]', // pink to blue
-  'from-[#FBDA61] to-[#FF5ACD]', // yellow to pink
+  'from-[#4158D0] to-[#C850C0]', // purple to pink (4th)
+  'from-[#0093E9] to-[#80D0C7]', // blue to teal (5th)
 ];
 
 const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) => {
+  // Show only top 5 agents like in the screenshot
+  const topAgents = useMemo(() => {
+    // First find the user agent
+    const userAgent = agents.find(agent => agent.isUser);
+    
+    // Sort the rest by balance
+    const sortedAgents = [...agents]
+      .filter(agent => !agent.isUser)
+      .sort((a, b) => b.balance - a.balance)
+      .slice(0, userAgent ? 4 : 5); // Take top 4 non-user agents if user exists, otherwise 5
+    
+    // Put user agent first, then the others
+    return userAgent 
+      ? [userAgent, ...sortedAgents]
+      : sortedAgents;
+  }, [agents]);
+  
   // Group logs by round
   const logsByRound = useMemo(() => {
     const grouped: { [key: number]: TradeLog[] } = {};
@@ -75,9 +88,9 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
   
   // Get the appropriate style class for each action type
   const getActionClassName = (action: string) => {
-    if (action === 'long') return 'bg-arena-green/20 text-arena-green px-2 py-0.5 rounded-full text-xs font-medium';
-    if (action === 'short') return 'bg-arena-red/20 text-arena-red px-2 py-0.5 rounded-full text-xs font-medium';
-    return 'bg-white/10 text-white px-2 py-0.5 rounded-full text-xs font-medium';
+    if (action === 'long') return 'bg-arena-green/20 text-arena-green px-2.5 py-1 rounded-full text-xs font-medium';
+    if (action === 'short') return 'bg-arena-red/20 text-arena-red px-2.5 py-1 rounded-full text-xs font-medium';
+    return 'bg-white/10 text-white px-2.5 py-1 rounded-full text-xs font-medium';
   };
   
   // Get trades for a specific agent and round
@@ -89,13 +102,8 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
   const getAgentHeaderGradient = (agent: Agent, index: number) => {
     if (agent.isUser) return agentHeaderGradients[0]; // User agent
     
-    // Get position in leaderboard
-    const position = agents
-      .sort((a, b) => b.balance - a.balance)
-      .findIndex(a => a.id === agent.id);
-      
-    if (position < 3) return agentHeaderGradients[position + 1];
-    return agentHeaderGradients[(index % agentHeaderGradients.length) || 4]; // Use other gradients for the rest
+    // Otherwise use the position in the sorted array (top 5)
+    return agentHeaderGradients[index] || agentHeaderGradients[5];
   };
 
   return (
@@ -113,21 +121,25 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
               </div>
             </TableHead>
             
-            {agents.map((agent, index) => (
+            {topAgents.map((agent, index) => (
               <TableHead 
                 key={agent.id} 
                 className={cn(
                   "text-white font-bold",
-                  index === agents.length - 1 ? "rounded-r-lg" : ""
+                  index === topAgents.length - 1 ? "rounded-r-lg" : ""
                 )}
               >
                 <div className={cn(
-                  "px-2 py-1 rounded-md bg-gradient-to-r bg-opacity-20",
+                  "px-3 py-2 rounded-md bg-gradient-to-r bg-opacity-20",
                   `bg-gradient-to-r ${getAgentHeaderGradient(agent, index)}/20`
                 )}>
-                  <div className="bg-clip-text text-transparent bg-gradient-to-r from-white to-white/80">
-                    {agent.name}
-                    {agent.isUser && <span className="ml-1.5 text-xs bg-white/20 px-1.5 py-0.5 rounded-sm text-white">YOU</span>}
+                  <div className="bg-clip-text text-transparent bg-gradient-to-r from-white to-white/80 flex items-center justify-between">
+                    <span className="truncate max-w-[100px]">{agent.name}</span>
+                    {agent.isUser && 
+                      <Badge className="ml-1.5 bg-white/20 hover:bg-white/30 text-white text-xs">
+                        YOU
+                      </Badge>
+                    }
                   </div>
                 </div>
               </TableHead>
@@ -144,7 +156,7 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
                     Round {round}
                   </div>
                 </TableCell>
-                {agents.map(agent => {
+                {topAgents.map((agent, index) => {
                   const trades = getAgentTradesForRound(agent.id, roundLogs);
                   const openTrade = trades.find(t => t.action === 'long' || t.action === 'short');
                   const closeTrade = trades.find(t => t.action === 'close');
@@ -159,7 +171,7 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
                       {trades.length > 0 ? (
                         <div className="flex flex-col gap-2">
                           {openTrade && (
-                            <div className="flex flex-col gap-1">
+                            <div className="flex flex-col gap-1.5">
                               <div className="flex items-center">
                                 <span className={getActionClassName(openTrade.action)}>
                                   {openTrade.action.toUpperCase()}
@@ -177,9 +189,9 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
                           )}
                           
                           {closeTrade && (
-                            <div className="flex flex-col gap-1 pt-2 mt-2 border-t border-white/5">
+                            <div className="flex flex-col gap-1.5 pt-2 mt-2 border-t border-white/5">
                               <div className="flex items-center">
-                                <span className="bg-white/10 text-white px-2 py-0.5 rounded-full text-xs font-medium">
+                                <span className="bg-white/10 text-white px-2.5 py-1 rounded-full text-xs font-medium">
                                   CLOSED
                                 </span>
                               </div>

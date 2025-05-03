@@ -4,6 +4,7 @@ import { CountUp } from 'countup.js';
 import { ArrowUp, ArrowDown, CircleUser } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface Agent {
   id: string;
@@ -29,12 +30,8 @@ const agentColorGradients = [
   'from-[#FFD700] to-[#FFA500]', // 1st place (gold)
   'from-[#C0C0C0] to-[#A9A9A9]', // 2nd place (silver)
   'from-[#CD7F32] to-[#A0522D]', // 3rd place (bronze)
-  'from-[#4158D0] to-[#C850C0]', // purple to pink
-  'from-[#0093E9] to-[#80D0C7]', // blue to teal
-  'from-[#8EC5FC] to-[#E0C3FC]', // light blue to light purple
-  'from-[#43E97B] to-[#38F9D7]', // green to teal
-  'from-[#FA8BFF] to-[#2BD2FF]', // pink to blue
-  'from-[#FBDA61] to-[#FF5ACD]', // yellow to pink
+  'from-[#4158D0] to-[#C850C0]', // purple to pink (4th)
+  'from-[#0093E9] to-[#80D0C7]', // blue to teal (5th)
 ];
 
 // Badge styles for position ranks
@@ -46,8 +43,23 @@ const positionBadgeStyles = [
 ];
 
 const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }) => {
-  // Sort by balance descending
-  const sortedAgents = [...agents].sort((a, b) => b.balance - a.balance);
+  // Show only top 5 agents like in the screenshot
+  const sortedAgents = React.useMemo(() => {
+    // First find the user agent
+    const userAgent = agents.find(agent => agent.isUser);
+    
+    // Sort the rest by balance
+    const sorted = [...agents]
+      .filter(agent => !agent.isUser)
+      .sort((a, b) => b.balance - a.balance)
+      .slice(0, userAgent ? 4 : 5); // Take top 4 non-user agents if user exists, otherwise 5
+    
+    // Put user agent first, then the others
+    return userAgent 
+      ? [userAgent, ...sorted]
+      : sorted;
+  }, [agents]);
+  
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [key, setKey] = useState<number>(0);
   
@@ -120,8 +132,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
   // Get color gradient for the agent
   const getAgentGradient = (agent: Agent, index: number): string => {
     if (agent.isUser) return agentColorGradients[0];
-    if (index < 3) return agentColorGradients[index + 1];
-    return agentColorGradients[index % agentColorGradients.length];
+    return agentColorGradients[index] || agentColorGradients[5];
   };
   
   // Get position badge style
@@ -129,24 +140,33 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
     return index < 3 ? positionBadgeStyles[index] : positionBadgeStyles[3];
   };
 
+  // Improved position tag with better spacing
   const getPositionTag = (position: 'long' | 'short' | null | undefined, size?: number, entryPrice?: number) => {
     if (!position) return null;
     
     return (
-      <div className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium ${
-        position === 'long' ? 'bg-arena-green/20 text-arena-green' : 'bg-arena-red/20 text-arena-red'
-      }`}>
-        {position === 'long' ? (
-          <ArrowUp className="w-3 h-3" />
-        ) : (
-          <ArrowDown className="w-3 h-3" />
-        )}
-        <span className="tracking-tight">{position.toUpperCase()}</span>
+      <div className="flex items-center gap-2">
+        <div className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium ${
+          position === 'long' ? 'bg-arena-green/20 text-arena-green' : 'bg-arena-red/20 text-arena-red'
+        }`}>
+          {position === 'long' ? (
+            <ArrowUp className="w-3 h-3" />
+          ) : (
+            <ArrowDown className="w-3 h-3" />
+          )}
+          <span className="tracking-tight">{position.toUpperCase()}</span>
+        </div>
+        
         {size && (
-          <span className="ml-1 text-white/70">${size.toLocaleString()}</span>
+          <div className="text-xs text-white/70 bg-white/10 px-2 py-1 rounded">
+            ${size.toLocaleString()}
+          </div>
         )}
+        
         {entryPrice && (
-          <span className="ml-1 text-white/70">@ ${entryPrice.toLocaleString()}</span>
+          <div className="text-xs text-white/70">
+            @ ${entryPrice.toLocaleString()}
+          </div>
         )}
       </div>
     );
@@ -156,7 +176,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
     return (
       <div className="p-4 space-y-3">
         <div className="animate-pulse flex flex-col space-y-2">
-          {[...Array(agents.length)].map((_, i) => (
+          {[...Array(5)].map((_, i) => (
             <div key={i} className="h-12 bg-white/5 rounded"></div>
           ))}
         </div>
@@ -197,20 +217,24 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                     {agent.isUser ? <CircleUser className="h-4 w-4 text-white" /> : agent.avatar}
                   </div>
                   <div className="flex flex-col">
-                    <span className={cn(
-                      "font-bold tracking-tight truncate transition-colors",
+                    <div className={cn(
+                      "font-bold tracking-tight truncate transition-colors flex items-center gap-1.5",
                       agent.isUser ? "text-white" : "text-white/90"
                     )}>
-                      {agent.name}
-                      {agent.isUser && <span className="ml-1.5 text-xs bg-white/20 px-1.5 py-0.5 rounded-sm">YOU</span>}
-                    </span>
+                      <span className="truncate max-w-[80px]">{agent.name}</span>
+                      {agent.isUser && 
+                        <Badge className="bg-white/20 hover:bg-white/30 text-white text-xs">
+                          YOU
+                        </Badge>
+                      }
+                    </div>
                     {agent.isUser && (
                       <span className="text-xs text-arena-accent/80">Your Agent</span>
                     )}
                   </div>
                 </div>
                 
-                {/* Position tag */}
+                {/* Position tag - IMPROVED SPACING */}
                 <div className="w-[200px] flex items-center">
                   {getPositionTag(agent.position, agent.positionSize, agent.entryPrice)}
                 </div>
