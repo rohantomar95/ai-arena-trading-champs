@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { CountUp } from 'countup.js';
 import { ArrowUp, ArrowDown, CircleUser } from 'lucide-react';
@@ -24,21 +23,21 @@ interface LeaderboardProps {
   isAnimating?: boolean;
 }
 
-// Updated Agent color palette - using specific colors from the provided gradient images
-const agentBarColors = [
-  'from-[#9b75f8] to-[#67c7e1]', // User agent (purple to light blue)
-  'from-[#9b75f8] to-[#9b75f8]', // 1st place solid purple
-  'from-[#8580f9] to-[#8580f9]', // 2nd place lighter purple
-  'from-[#7a8bf9] to-[#7a8bf9]', // 3rd place blue-purple
-  'from-[#67a6f0] to-[#67a6f0]', // 4th place blue
-  'from-[#67c7e1] to-[#67c7e1]', // 5th place light blue
+// Updated Agent color palette - using distinct solid colors for each agent
+const agentColors = [
+  '#9b75f8', // User agent (purple)
+  '#8580f9', // 1st place (lighter purple)
+  '#7a8bf9', // 2nd place (blue-purple)
+  '#67a6f0', // 3rd place (blue)
+  '#67c7e1', // 4th place (light blue)
+  '#33C3F0', // 5th place (sky blue)
 ];
 
 // Badge styles for position ranks
 const positionBadgeStyles = [
-  'bg-gradient-to-r from-[#9b75f8] to-[#8580f9] ring-2 ring-[#9b75f8]/50 shadow-lg shadow-[#9b75f8]/20', // 1st
-  'bg-gradient-to-r from-[#8580f9] to-[#7a8bf9] ring-2 ring-[#8580f9]/50', // 2nd
-  'bg-gradient-to-r from-[#7a8bf9] to-[#67a6f0] ring-2 ring-[#7a8bf9]/50', // 3rd
+  'bg-[#9b75f8] ring-2 ring-[#9b75f8]/50 shadow-lg shadow-[#9b75f8]/20', // 1st
+  'bg-[#8580f9] ring-2 ring-[#8580f9]/50', // 2nd
+  'bg-[#7a8bf9] ring-2 ring-[#7a8bf9]/50', // 3rd
   'bg-white/10 ring-1 ring-white/20', // Others
 ];
 
@@ -189,10 +188,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
   // Calculate the maximum balance for scaling bars
   const maxBalance = Math.max(...sortedAgents.map(a => a.balance));
   
-  // Get color gradient for the agent - now using the updated color palette
-  const getAgentGradient = (agent: Agent, index: number): string => {
-    if (agent.isUser) return agentBarColors[0];
-    return agentBarColors[index] || agentBarColors[5];
+  // Get color for the agent - now using solid colors from the palette
+  const getAgentColor = (agent: Agent, index: number): string => {
+    if (agent.isUser) return agentColors[0];
+    return agentColors[index + 1] || agentColors[5];
   };
   
   // Get position badge style
@@ -250,7 +249,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
         {sortedAgents.map((agent, index) => {
           const isProfitable = agent.pnlPercent >= 0;
           const barWidth = `${Math.max(5, (agent.balance / maxBalance) * 100)}%`; // Min 5% width for visibility
-          const agentGradient = getAgentGradient(agent, index);
+          const agentColor = getAgentColor(agent, index);
           const hasPositionChanged = positionChanged[agent.id];
           
           return (
@@ -259,8 +258,11 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
               className={cn(
                 "flex items-center h-24 rounded-xl p-0.5 transition-all duration-500",
                 hasPositionChanged ? "position-changed" : "transition-transform duration-500",
-                agent.isUser ? "bg-gradient-to-r from-[#9b75f8]/50 to-[#67c7e1]/50 shadow-lg shadow-[#9b75f8]/10" : "hover:bg-white/5"
+                agent.isUser ? `shadow-lg shadow-[${agentColor}]/10` : "hover:bg-white/5"
               )}
+              style={{
+                background: agent.isUser ? `linear-gradient(to right, ${agentColor}50, ${agentColor}30)` : 'transparent'
+              }}
             >
               <div className="w-full h-full bg-arena-bg/95 rounded-lg flex items-center px-1">
                 {/* Position rank with badge effect */}
@@ -275,7 +277,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                 
                 {/* Agent name with avatar */}
                 <div className="w-[150px] flex items-center gap-3">
-                  <div className={`h-10 w-10 flex items-center justify-center text-lg rounded-full bg-gradient-to-r ${agentGradient} shadow-sm`}>
+                  <div className="h-10 w-10 flex items-center justify-center text-lg rounded-full shadow-sm"
+                    style={{ backgroundColor: agentColor }}>
                     {agent.isUser ? <CircleUser className="h-5 w-5 text-white" /> : agent.avatar}
                   </div>
                   <div className="flex flex-col">
@@ -286,7 +289,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                       <span className="truncate max-w-[100px]">{agent.name}</span>
                     </div>
                     {agent.isUser && (
-                      <span className="text-sm text-[#9b75f8]/80">Your Agent</span>
+                      <span className="text-sm" style={{ color: `${agentColor}80` }}>Your Agent</span>
                     )}
                   </div>
                 </div>
@@ -296,13 +299,19 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                   {getPositionTag(agent.position, agent.positionSize, agent.entryPrice)}
                 </div>
                 
-                {/* Progress bar - using our specific gradient colors */}
+                {/* Progress bar - using our specific solid colors */}
                 <div className="relative flex-1 h-16 flex items-center">
                   <Progress 
                     className="h-10 bg-white/5" 
                     value={(agent.balance / maxBalance) * 100}
-                    // Use agent's color for the progress indicator
-                    indicatorClassName={`bg-gradient-to-r ${agentGradient} transition-all duration-1000 ease-out`}
+                    // Use agent's solid color for the progress indicator
+                    style={{ 
+                      "--progress-fill-color": agentColor 
+                    }}
+                    indicatorClassName="transition-all duration-1000 ease-out"
+                    style={{
+                      backgroundColor: agentColor
+                    }}
                   />
                   
                   {/* Balance text */}

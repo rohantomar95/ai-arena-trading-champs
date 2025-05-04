@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { 
   Table, 
@@ -30,14 +29,14 @@ interface TradeHistoryTableProps {
   logs: TradeLog[];
 }
 
-// Updated agent color gradients to match the provided image
-const agentHeaderGradients = [
-  'from-[#9b75f8] to-[#67c7e1]', // User agent (purple to light blue)
-  'from-[#9b75f8] to-[#8580f9]', // 1st place (purple)
-  'from-[#8580f9] to-[#7a8bf9]', // 2nd place (lighter purple)
-  'from-[#7a8bf9] to-[#67a6f0]', // 3rd place (blue-purple)
-  'from-[#67a6f0] to-[#67c7e1]', // 4th place (blue)
-  'from-[#67c7e1] to-[#67c7e1]', // 5th place (light blue)
+// Updated agent colors - using distinct solid colors for each agent
+const agentColors = [
+  '#9b75f8', // User agent (purple)
+  '#8580f9', // 1st place (lighter purple)
+  '#7a8bf9', // 2nd place (blue-purple)
+  '#67a6f0', // 3rd place (blue)
+  '#67c7e1', // 4th place (light blue)
+  '#33C3F0', // 5th place (sky blue)
 ];
 
 const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) => {
@@ -99,12 +98,11 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
     return roundLogs.filter(log => log.agentId === agentId);
   };
   
-  // Get agent's color gradient based on position or special status
-  const getAgentHeaderGradient = (agent: Agent, index: number) => {
-    if (agent.isUser) return agentHeaderGradients[0]; // User agent
-    
+  // Get agent's color based on position or special status
+  const getAgentHeaderColor = (agent: Agent, index: number) => {
+    if (agent.isUser) return agentColors[0]; // User agent
     // Otherwise use the position in the sorted array (top 5)
-    return agentHeaderGradients[index] || agentHeaderGradients[5];
+    return agentColors[index + 1] || agentColors[5];
   };
 
   // Calculate PnL for a closed trade
@@ -136,10 +134,10 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
         <TableHeader>
           <TableRow className="border-white/10 bg-arena-card/80">
             <TableHead 
-              className="text-white font-bold text-center bg-gradient-to-r from-[#9b75f8]/30 to-[#67c7e1]/30 rounded-l-lg"
+              className="text-white font-bold text-center bg-[#9b75f8]/30 rounded-l-lg"
             >
               <div className="flex justify-center">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#9b75f8] to-[#67c7e1] font-bold">
+                <span className="font-bold" style={{ color: "#9b75f8" }}>
                   Round
                 </span>
               </div>
@@ -153,18 +151,20 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
                   index === topAgents.length - 1 ? "rounded-r-lg" : ""
                 )}
               >
-                {/* Updated agent header style to match the second image with proper border and gradient */}
-                <div className={cn(
-                  "px-3 py-2 rounded-md border border-white/10",
-                  "bg-gradient-to-r from-[#1D1F24] to-[#1D1F24]"  
-                )}>
-                  <div className={cn(
-                    "bg-clip-text text-transparent flex items-center",
-                    `bg-gradient-to-r ${getAgentHeaderGradient(agent, index)}`
-                  )}>
-                    <span className="truncate max-w-[100px] font-medium">{agent.name}</span>
+                {/* Updated agent header style to match the second image with proper border and solid color */}
+                <div className="px-3 py-2 rounded-md border border-white/10 bg-[#1D1F24]">
+                  <div className="flex items-center">
+                    <span 
+                      className="truncate max-w-[100px] font-medium"
+                      style={{ color: getAgentHeaderColor(agent, index) }}
+                    >
+                      {agent.name}
+                    </span>
                     {agent.isUser && 
-                      <Badge className="ml-1.5 bg-[#9b75f8]/20 hover:bg-[#9b75f8]/30 text-[#9b75f8] text-xs">
+                      <Badge className="ml-1.5 text-xs" style={{ 
+                        backgroundColor: `${agentColors[0]}20`,
+                        color: agentColors[0]
+                      }}>
                         YOU
                       </Badge>
                     }
