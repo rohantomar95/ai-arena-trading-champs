@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { CountUp } from 'countup.js';
 import { ArrowUp, ArrowDown, CircleUser } from 'lucide-react';
@@ -304,10 +305,6 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                   <Progress 
                     className="h-10 bg-white/5" 
                     value={(agent.balance / maxBalance) * 100}
-                    // Use agent's solid color for the progress indicator
-                    style={{ 
-                      "--progress-fill-color": agentColor 
-                    }}
                     indicatorClassName="transition-all duration-1000 ease-out"
                     style={{
                       backgroundColor: agentColor
