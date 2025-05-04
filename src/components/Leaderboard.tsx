@@ -24,21 +24,21 @@ interface LeaderboardProps {
   isAnimating?: boolean;
 }
 
-// Agent color palette - modern gradient definitions
-const agentColorGradients = [
-  'from-[#11E7DA] to-[#9B87F5]', // User agent (teal to purple)
-  'from-[#FFD700] to-[#FFA500]', // 1st place (gold)
-  'from-[#C0C0C0] to-[#A9A9A9]', // 2nd place (silver)
-  'from-[#CD7F32] to-[#A0522D]', // 3rd place (bronze)
-  'from-[#4158D0] to-[#C850C0]', // purple to pink (4th)
-  'from-[#0093E9] to-[#80D0C7]', // blue to teal (5th)
+// Updated Agent color palette - using specific colors from the provided gradient images
+const agentBarColors = [
+  'from-[#9b75f8] to-[#67c7e1]', // User agent (purple to light blue)
+  'from-[#9b75f8] to-[#9b75f8]', // 1st place solid purple
+  'from-[#8580f9] to-[#8580f9]', // 2nd place lighter purple
+  'from-[#7a8bf9] to-[#7a8bf9]', // 3rd place blue-purple
+  'from-[#67a6f0] to-[#67a6f0]', // 4th place blue
+  'from-[#67c7e1] to-[#67c7e1]', // 5th place light blue
 ];
 
 // Badge styles for position ranks
 const positionBadgeStyles = [
-  'bg-gradient-to-r from-yellow-300 to-yellow-500 ring-2 ring-yellow-500/50 shadow-lg shadow-yellow-500/20', // 1st
-  'bg-gradient-to-r from-gray-300 to-gray-400 ring-2 ring-gray-400/50', // 2nd
-  'bg-gradient-to-r from-amber-600 to-amber-700 ring-2 ring-amber-700/50', // 3rd
+  'bg-gradient-to-r from-[#9b75f8] to-[#8580f9] ring-2 ring-[#9b75f8]/50 shadow-lg shadow-[#9b75f8]/20', // 1st
+  'bg-gradient-to-r from-[#8580f9] to-[#7a8bf9] ring-2 ring-[#8580f9]/50', // 2nd
+  'bg-gradient-to-r from-[#7a8bf9] to-[#67a6f0] ring-2 ring-[#7a8bf9]/50', // 3rd
   'bg-white/10 ring-1 ring-white/20', // Others
 ];
 
@@ -189,10 +189,10 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
   // Calculate the maximum balance for scaling bars
   const maxBalance = Math.max(...sortedAgents.map(a => a.balance));
   
-  // Get color gradient for the agent
+  // Get color gradient for the agent - now using the updated color palette
   const getAgentGradient = (agent: Agent, index: number): string => {
-    if (agent.isUser) return agentColorGradients[0];
-    return agentColorGradients[index] || agentColorGradients[5];
+    if (agent.isUser) return agentBarColors[0];
+    return agentBarColors[index] || agentBarColors[5];
   };
   
   // Get position badge style
@@ -259,7 +259,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
               className={cn(
                 "flex items-center h-24 rounded-xl p-0.5 transition-all duration-500",
                 hasPositionChanged ? "position-changed" : "transition-transform duration-500",
-                agent.isUser ? "bg-gradient-to-r from-arena-accent/50 to-arena-accent2/50 shadow-lg shadow-arena-accent/10" : "hover:bg-white/5"
+                agent.isUser ? "bg-gradient-to-r from-[#9b75f8]/50 to-[#67c7e1]/50 shadow-lg shadow-[#9b75f8]/10" : "hover:bg-white/5"
               )}
             >
               <div className="w-full h-full bg-arena-bg/95 rounded-lg flex items-center px-1">
@@ -286,17 +286,17 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ agents, isAnimating = false }
                       <span className="truncate max-w-[100px]">{agent.name}</span>
                     </div>
                     {agent.isUser && (
-                      <span className="text-sm text-arena-accent/80">Your Agent</span>
+                      <span className="text-sm text-[#9b75f8]/80">Your Agent</span>
                     )}
                   </div>
                 </div>
                 
-                {/* Position tag - IMPROVED SPACING */}
+                {/* Position tag */}
                 <div className="w-[220px] flex items-center">
                   {getPositionTag(agent.position, agent.positionSize, agent.entryPrice)}
                 </div>
                 
-                {/* Progress bar - use shadcn Progress component - INCREASED HEIGHT */}
+                {/* Progress bar - using our specific gradient colors */}
                 <div className="relative flex-1 h-16 flex items-center">
                   <Progress 
                     className="h-10 bg-white/5" 

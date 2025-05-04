@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { 
   Table, 
@@ -29,14 +30,14 @@ interface TradeHistoryTableProps {
   logs: TradeLog[];
 }
 
-// Agent color gradients - same as in Leaderboard for consistency
+// Updated agent color gradients to match the provided image
 const agentHeaderGradients = [
-  'from-[#11E7DA] to-[#9B87F5]', // User agent (teal to purple)
-  'from-[#FFD700] to-[#FFA500]', // 1st place (gold)
-  'from-[#C0C0C0] to-[#A9A9A9]', // 2nd place (silver)
-  'from-[#CD7F32] to-[#A0522D]', // 3rd place (bronze)
-  'from-[#4158D0] to-[#C850C0]', // purple to pink (4th)
-  'from-[#0093E9] to-[#80D0C7]', // blue to teal (5th)
+  'from-[#9b75f8] to-[#67c7e1]', // User agent (purple to light blue)
+  'from-[#9b75f8] to-[#8580f9]', // 1st place (purple)
+  'from-[#8580f9] to-[#7a8bf9]', // 2nd place (lighter purple)
+  'from-[#7a8bf9] to-[#67a6f0]', // 3rd place (blue-purple)
+  'from-[#67a6f0] to-[#67c7e1]', // 4th place (blue)
+  'from-[#67c7e1] to-[#67c7e1]', // 5th place (light blue)
 ];
 
 const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) => {
@@ -135,10 +136,10 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
         <TableHeader>
           <TableRow className="border-white/10 bg-arena-card/80">
             <TableHead 
-              className="text-white font-bold text-center bg-gradient-to-r from-arena-accent/30 to-arena-accent2/30 rounded-l-lg"
+              className="text-white font-bold text-center bg-gradient-to-r from-[#9b75f8]/30 to-[#67c7e1]/30 rounded-l-lg"
             >
               <div className="flex justify-center">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-arena-accent to-arena-accent2 font-bold">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#9b75f8] to-[#67c7e1] font-bold">
                   Round
                 </span>
               </div>
@@ -152,14 +153,18 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
                   index === topAgents.length - 1 ? "rounded-r-lg" : ""
                 )}
               >
+                {/* Updated agent header style to match the second image with proper border and gradient */}
                 <div className={cn(
-                  "px-3 py-2 rounded-md bg-gradient-to-r bg-opacity-20",
-                  `bg-gradient-to-r ${getAgentHeaderGradient(agent, index)}/20`
+                  "px-3 py-2 rounded-md border border-white/10",
+                  "bg-gradient-to-r from-[#1D1F24] to-[#1D1F24]"  
                 )}>
-                  <div className="bg-clip-text text-transparent bg-gradient-to-r from-white to-white/80 flex items-center">
-                    <span className="truncate max-w-[100px]">{agent.name}</span>
+                  <div className={cn(
+                    "bg-clip-text text-transparent flex items-center",
+                    `bg-gradient-to-r ${getAgentHeaderGradient(agent, index)}`
+                  )}>
+                    <span className="truncate max-w-[100px] font-medium">{agent.name}</span>
                     {agent.isUser && 
-                      <Badge className="ml-1.5 bg-white/20 hover:bg-white/30 text-white text-xs">
+                      <Badge className="ml-1.5 bg-[#9b75f8]/20 hover:bg-[#9b75f8]/30 text-[#9b75f8] text-xs">
                         YOU
                       </Badge>
                     }
@@ -174,8 +179,8 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
             .sort(([a], [b]) => Number(a) - Number(b)) // Sort rounds in ascending order
             .map(([round, roundLogs]) => (
               <TableRow key={round} className="border-white/5 hover:bg-white/5">
-                <TableCell className="font-bold text-center bg-gradient-to-r from-arena-accent/10 to-arena-accent2/10">
-                  <div className="bg-clip-text text-transparent bg-gradient-to-r from-arena-accent to-arena-accent2">
+                <TableCell className="font-bold text-center bg-gradient-to-r from-[#9b75f8]/10 to-[#67c7e1]/10">
+                  <div className="bg-clip-text text-transparent bg-gradient-to-r from-[#9b75f8] to-[#67c7e1]">
                     Round {round}
                   </div>
                 </TableCell>
@@ -189,7 +194,7 @@ const TradeHistoryTable: React.FC<TradeHistoryTableProps> = ({ agents, logs }) =
                   
                   const cellClass = cn(
                     "py-3",
-                    agent.isUser ? "bg-gradient-to-r from-arena-accent/5 to-arena-accent2/5" : ""
+                    agent.isUser ? "bg-gradient-to-r from-[#9b75f8]/5 to-[#67c7e1]/5" : ""
                   );
                   
                   return (
